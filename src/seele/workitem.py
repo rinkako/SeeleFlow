@@ -10,4 +10,9 @@ class Workitem:
     """
     Workitem is an abstract for a task instance need to be handle.
     """
-    pass
+
+    def __init__(self):
+
+        # workitem global unique id
+        self.wid: str = None
+
