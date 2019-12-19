@@ -101,6 +101,7 @@ class WorkQueueType(Enum):
     STARTED = 3
 
     """
+    
     A queue contains all suspended workitems. 
     """
     SUSPENDED = 4
