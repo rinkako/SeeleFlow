@@ -4,7 +4,7 @@ Project Seele
 @author : Rinka
 @date   : 2019/12/17
 """
-from seele.clazz import ResourcingContext
+from pyseele.clazz import ResourcingContext
 
 
 class ResourceServiceImpl:

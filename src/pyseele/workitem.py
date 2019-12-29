@@ -4,7 +4,7 @@ Project Seele
 @author : Rinka
 @date   : 2019/12/17
 """
-from seele.workflow import WorkitemStateType
+from pyseele.workflow import WorkitemStateType
 
 
 class Workitem:

@@ -4,7 +4,7 @@ Project Seele
 @author : Rinka
 @date   : 2019/12/17
 """
-from seele.workitem import Workitem
+from pyseele.workitem import Workitem
 
 
 class ResourcingContext:
