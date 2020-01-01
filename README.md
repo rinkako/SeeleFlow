@@ -1,4 +1,4 @@
 # SeeleFlow
-Distributed State-machine WFMS and embedded SDK implemented via python
+Distributed State-machine Workflow and Resource Service 
+with convenient SDK for job-supervisors and job-handlers.
 
-Simpliest is best
