@@ -10,4 +10,5 @@ package org.rinka.seele.share.workflow;
  * Usage : 工作项实体包装
  */
 public class WorkItem {
+
 }

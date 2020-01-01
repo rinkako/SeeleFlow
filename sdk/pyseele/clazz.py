@@ -9,7 +9,7 @@ from pyseele.workitem import Workitem
 
 class ResourcingContext:
     """
-    Resourcing Context maintains all resource service principals that guide RS
+    Resourcing Context maintains all org.rinka.seele.server.resource service principals that guide RS
     to handle the workitem.
     """
     def __init__(self):

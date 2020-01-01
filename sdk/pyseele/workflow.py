@@ -19,52 +19,52 @@ class WorkitemStateType(Enum):
     Created = 0
 
     """
-    A workitem is cancelled before it was fired to resource service.
+    A workitem is cancelled before it was fired to org.rinka.seele.server.resource service.
     """
     Cancelled = 1
 
     """
-    A workitem is allocated to a resource, but have not been accepted by the resource yet.
+    A workitem is allocated to a org.rinka.seele.server.resource, but have not been accepted by the org.rinka.seele.server.resource yet.
     """
     Allocated = 2
 
     """
-    A workitem is fired to resource service, while resource service cannot find any resource to handle it.
+    A workitem is fired to org.rinka.seele.server.resource service, while org.rinka.seele.server.resource service cannot find any org.rinka.seele.server.resource to handle it.
     """
     BadAllocated = 3
 
     """
-    A workitem is accepted by a resource, but the resource has not process it yet. 
+    A workitem is accepted by a org.rinka.seele.server.resource, but the org.rinka.seele.server.resource has not process it yet.
     """
     Accepted = 4
 
     """
-    A workitem is executing by a resource.
+    A workitem is executing by a org.rinka.seele.server.resource.
     """
     Running = 5
 
     """
-    A workitem completed at a resource but some exceptions occurred when executing.
+    A workitem completed at a org.rinka.seele.server.resource but some exceptions occurred when executing.
     """
     Exception = 6
 
     """
-    A workitem completed at a resource.
+    A workitem completed at a org.rinka.seele.server.resource.
     """
     Completed = 7
 
     """
-    A workitem is set to be completed at a resource by human when it was still in running state. 
+    A workitem is set to be completed at a org.rinka.seele.server.resource by human when it was still in running state.
     """
     ForcedCompleted = 8
 
     """
-    A workitem is waiting for any resource to pull it and accept it.
+    A workitem is waiting for any org.rinka.seele.server.resource to pull it and accept it.
     """
     Offered = 9
 
     """
-    A workitem is paused when it executing at a resource, this action is not forcible and only give a hint to resource.
+    A workitem is paused when it executing at a org.rinka.seele.server.resource, this action is not forcible and only give a hint to org.rinka.seele.server.resource.
     """
     Suspended = 10
 

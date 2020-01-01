@@ -17,7 +17,7 @@ class ResourceServiceImpl:
     @staticmethod
     def perform_submit(ctx: ResourcingContext) -> None:
         """
-        Perform resource service on a workitem which is submitted to RS.
+        Perform org.rinka.seele.server.resource service on a workitem which is submitted to RS.
         :param ctx: a context contains workitem to be resourcing
         """
         pass
