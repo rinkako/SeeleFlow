@@ -17,10 +17,6 @@ import java.util.HashSet;
  *         maintaining and comparing.
  */
 public abstract class Selector implements Comparable<Selector>, Serializable {
-
-    /**
-     * Serial version UID.
-     */
     private static final long serialVersionUID = 1L;
 
     /**
