@@ -15,40 +15,24 @@ import org.rinka.seele.server.engine.resourcing.supplier.Supplier;
 public final class SelectorReflector {
     /**
      * Create a new allocator by its name.
+     *
      * @param allocatorName name of allocator to be created
-     * @param rstid rs request id
-     * @param rtid process rtid
-     * @return Specific allocator
-     * @throws Exception reflect instance create failed
+     * @return Specific allocator instance
      */
-    public static Allocator ReflectAllocator(String allocatorName, String rstid, String rtid) throws Exception {
-        try {
-            Class classType = Class.forName(SelectorReflector.ALLOCATOR_PACKAGE_PATH + allocatorName + SelectorReflector.ALLOCATOR_POSTFIX);
-            return (Allocator) classType.newInstance();
-        }
-        catch (Exception ex) {
-            // TODO
-            throw ex;
-        }
+    public static Allocator ReflectAllocator(String allocatorName) throws Exception {
+        Class classType = Class.forName(SelectorReflector.ALLOCATOR_PACKAGE_PATH + allocatorName + SelectorReflector.ALLOCATOR_POSTFIX);
+        return (Allocator) classType.newInstance();
     }
 
     /**
      * Create a new supplier by its name.
-     * @param supplierName name of filter to be created
-     * @param rstid rs request id
-     * @param rtid process rtid
-     * @return Specific filter
-     * @throws Exception reflect instance create failed
+     *
+     * @param supplierName name of supplier to be created
+     * @return Specific supplier instance
      */
-    public static Supplier ReflectSupplier(String supplierName, String rstid, String rtid) throws Exception {
-        try {
-            Class classType = Class.forName(SelectorReflector.SUPPLIER_PACKAGE_PATH + supplierName + SelectorReflector.FILTER_POSTFIX);
-            return (Supplier) classType.newInstance();
-        }
-        catch (Exception ex) {
-            // TODO
-            throw ex;
-        }
+    public static Supplier ReflectSupplier(String supplierName) throws Exception {
+        Class classType = Class.forName(SelectorReflector.SUPPLIER_PACKAGE_PATH + supplierName + SelectorReflector.FILTER_POSTFIX);
+        return (Supplier) classType.newInstance();
     }
 
     /**
@@ -57,7 +41,7 @@ public final class SelectorReflector {
     private static final String ALLOCATOR_PACKAGE_PATH = "org.rinka.seele.server.engine.resourcing.allocator.";
 
     /**
-     * Package path of Allocators.
+     * Package path of Supplier.
      */
     private static final String SUPPLIER_PACKAGE_PATH = "org.rinka.seele.server.engine.resourcing.supplier.";
 
