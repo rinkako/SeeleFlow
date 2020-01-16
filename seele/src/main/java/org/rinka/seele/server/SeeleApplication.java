@@ -7,6 +7,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class SeeleApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(SeeleApplication.class, args);
+         SpringApplication.run(SeeleApplication.class, args);
     }
 }
