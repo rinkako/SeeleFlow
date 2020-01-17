@@ -1,7 +1,6 @@
 /*
  * Author : Rinka
  * Date   : 2020/1/16
- * Contact: gzlinjia@corp.netease.com
  */
 package org.rinka.seele.server.ws.listener;
 

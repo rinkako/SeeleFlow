@@ -1,13 +1,11 @@
 /*
  * Author : Rinka
  * Date   : 2020/1/16
- * Contact: gzlinjia@corp.netease.com
  */
 package org.rinka.seele.server.ws;
 
 import com.corundumstudio.socketio.SocketIOClient;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ConcurrentHashMap;
 

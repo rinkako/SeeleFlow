@@ -1,12 +1,12 @@
 /*
  * Author : Rinka
  * Date   : 2020/1/16
- * Contact: gzlinjia@corp.netease.com
  */
 package org.rinka.seele.server.ws;
 
 import com.corundumstudio.socketio.Configuration;
 import com.corundumstudio.socketio.SocketIOServer;
+import org.rinka.seele.server.ws.listener.ParticipantAuthListener;
 import org.rinka.seele.server.ws.listener.ParticipantConnectInListener;
 import org.rinka.seele.server.ws.listener.ParticipantDataListener;
 import org.rinka.seele.server.ws.listener.ParticipantDisconnectListener;
@@ -22,6 +22,9 @@ import javax.annotation.PostConstruct;
  */
 @Component
 public class SeeleSocketIOServer {
+
+    @Autowired
+    private ParticipantAuthListener authListener;
 
     @Autowired
     private ParticipantConnectInListener connectListener;
@@ -42,6 +45,7 @@ public class SeeleSocketIOServer {
         Configuration config = new Configuration();
         config.setPort(this.listenPort);
         config.setHostname("localhost");
+        config.setAuthorizationListener(this.authListener);
         this.server = new SocketIOServer(config);
         this.server.addConnectListener(this.connectListener);
         this.server.addDisconnectListener(this.disconnectListener);
