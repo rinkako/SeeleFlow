@@ -6,10 +6,7 @@ package org.rinka.seele.server.ws;
 
 import com.corundumstudio.socketio.Configuration;
 import com.corundumstudio.socketio.SocketIOServer;
-import org.rinka.seele.server.ws.listener.ParticipantAuthListener;
-import org.rinka.seele.server.ws.listener.ParticipantConnectInListener;
-import org.rinka.seele.server.ws.listener.ParticipantDataListener;
-import org.rinka.seele.server.ws.listener.ParticipantDisconnectListener;
+import org.rinka.seele.server.ws.listener.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -20,8 +17,20 @@ import javax.annotation.PostConstruct;
  * Class : SeeleSocketIOServer
  * Usage :
  */
+@SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 @Component
 public class SeeleSocketIOServer {
+
+    public static final String HEADER_AuthToken = "token";
+    public static final String HEADER_ParticipantId = "participant-id";
+
+    public static final String EVENT_RSSystemRequest = "__WF_RS_SYSTEM_EVT__";
+    public static final String EVENT_RSSystemResponse = "__WF_RS_SYSTEM_RESPONSE_EVT__";
+    public static final String EVENT_RSEvent = "__WF_RS_DISPATCH_EVT__";
+    public static final String EVENT_RSRequireMeta = "__WF_RS_REQUIRE_META__";
+    public static final String EVENT_RSResponseMeta = "__WF_RS_RESPONSE_META__";
+    public static final String EVENT_HeartBeatEvent = "__WF_HEARTBEAT_CLIENT_EVT__";
+    public static final String EVENT_HeartBeatResponseEvent = "__WF_HEARTBEAT_RESPONSE_EVT__";
 
     @Autowired
     private ParticipantAuthListener authListener;
@@ -31,6 +40,15 @@ public class SeeleSocketIOServer {
 
     @Autowired
     private ParticipantDisconnectListener disconnectListener;
+
+    @Autowired
+    private ParticipantHeartbeatListener heartbeatListener;
+
+    @Autowired
+    private ParticipantMetaListener metaListener;
+
+    @Autowired
+    private ParticipantSystemListener systemListener;
 
     @Autowired
     private ParticipantDataListener eventListener;
@@ -49,8 +67,10 @@ public class SeeleSocketIOServer {
         this.server = new SocketIOServer(config);
         this.server.addConnectListener(this.connectListener);
         this.server.addDisconnectListener(this.disconnectListener);
-        this.server.addEventListener("__WF_RS_RESPONSE_META__", String.class, this.eventListener);
-        this.server.addEventListener("__WF_HEARTBEAT_CLIENT_EVT__", String.class, this.eventListener);
+        this.server.addEventListener(EVENT_RSResponseMeta, String.class, this.eventListener);
+        this.server.addEventListener(EVENT_HeartBeatEvent, String.class, this.heartbeatListener);
+        this.server.addEventListener(EVENT_HeartBeatEvent, String.class, this.systemListener);
+        this.server.addEventListener(EVENT_RSSystemResponse, String.class, this.metaListener);
         this.server.start();
     }
 }

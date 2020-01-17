@@ -6,12 +6,15 @@ package org.rinka.seele.server.ws.listener;
 
 import com.corundumstudio.socketio.AuthorizationListener;
 import com.corundumstudio.socketio.HandshakeData;
+import lombok.extern.slf4j.Slf4j;
+import org.rinka.seele.server.ws.SeeleSocketIOServer;
 import org.springframework.stereotype.Component;
 
 /**
  * Class : ParticipantAuthListener
  * Usage :
  */
+@Slf4j
 @Component
 public class ParticipantAuthListener implements AuthorizationListener {
 
@@ -23,7 +26,7 @@ public class ParticipantAuthListener implements AuthorizationListener {
      */
     @Override
     public boolean isAuthorized(HandshakeData data) {
-        String token = data.getHttpHeaders().get("token");
+        String token = data.getHttpHeaders().get(SeeleSocketIOServer.HEADER_AuthToken);
         if (token == null) {
             return false;
         } else {
