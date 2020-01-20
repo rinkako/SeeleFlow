@@ -2,7 +2,7 @@
  * Author : Rinka
  * Date   : 2020/1/17
  */
-package org.rinka.seele.server.ws.listener;
+package org.rinka.seele.server.connect.ws.listener;
 
 import com.corundumstudio.socketio.AckRequest;
 import com.corundumstudio.socketio.SocketIOClient;

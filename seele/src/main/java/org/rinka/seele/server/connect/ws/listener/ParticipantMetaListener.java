@@ -2,10 +2,8 @@
  * Author : Rinka
  * Date   : 2020/1/17
  */
-package org.rinka.seele.server.ws.listener;
+package org.rinka.seele.server.connect.ws.listener;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.corundumstudio.socketio.AckRequest;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.listener.DataListener;
@@ -13,7 +11,7 @@ import io.netty.handler.codec.http.HttpHeaders;
 import lombok.extern.slf4j.Slf4j;
 import org.rinka.seele.server.engine.resourcing.participant.ParticipantPool;
 import org.rinka.seele.server.engine.resourcing.participant.agent.MetadataPackage;
-import org.rinka.seele.server.ws.SeeleSocketIOServer;
+import org.rinka.seele.server.connect.ws.SeeleSocketIOServer;
 import org.springframework.stereotype.Component;
 
 /**

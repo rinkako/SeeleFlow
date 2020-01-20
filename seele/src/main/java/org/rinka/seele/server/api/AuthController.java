@@ -3,7 +3,7 @@
  * Author : Rinka
  * Date   : 2020/1/1
  */
-package org.rinka.seele.server.rest;
+package org.rinka.seele.server.api;
 
 import org.rinka.seele.server.entity.User;
 import org.rinka.seele.server.service.UserAuthService;

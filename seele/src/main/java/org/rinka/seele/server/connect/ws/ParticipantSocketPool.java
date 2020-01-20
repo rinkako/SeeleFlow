@@ -2,13 +2,12 @@
  * Author : Rinka
  * Date   : 2020/1/16
  */
-package org.rinka.seele.server.ws;
+package org.rinka.seele.server.connect.ws;
 
 import com.corundumstudio.socketio.SocketIOClient;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 
 /**
  * Class : ParticipantSocketPool

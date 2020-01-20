@@ -2,11 +2,11 @@
  * Author : Rinka
  * Date   : 2020/1/16
  */
-package org.rinka.seele.server.ws;
+package org.rinka.seele.server.connect.ws;
 
 import com.corundumstudio.socketio.Configuration;
 import com.corundumstudio.socketio.SocketIOServer;
-import org.rinka.seele.server.ws.listener.*;
+import org.rinka.seele.server.connect.ws.listener.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

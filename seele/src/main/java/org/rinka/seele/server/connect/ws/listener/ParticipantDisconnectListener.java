@@ -2,13 +2,13 @@
  * Author : Rinka
  * Date   : 2020/1/16
  */
-package org.rinka.seele.server.ws.listener;
+package org.rinka.seele.server.connect.ws.listener;
 
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.listener.DisconnectListener;
 import lombok.extern.slf4j.Slf4j;
-import org.rinka.seele.server.ws.ParticipantSocketPool;
-import org.rinka.seele.server.ws.SeeleSocketIOServer;
+import org.rinka.seele.server.connect.ws.ParticipantSocketPool;
+import org.rinka.seele.server.connect.ws.SeeleSocketIOServer;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
