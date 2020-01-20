@@ -31,6 +31,6 @@ public class ParticipantMetaListener implements DataListener<MetadataPackage> {
         HttpHeaders headers = client.getHandshakeData().getHttpHeaders();
         String namespace = headers.get(SeeleSocketIOServer.HEADER_Namespace);
         String participantId = headers.get(SeeleSocketIOServer.HEADER_ParticipantId);
-        ParticipantPool.addAgentParticipant(namespace, participantId, data);
+        ParticipantPool.namespace(namespace).addAgentParticipant(participantId, data);
     }
 }

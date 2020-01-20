@@ -6,6 +6,7 @@
 package org.rinka.seele.server;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 /**
  * Class : GDP
@@ -14,4 +15,5 @@ import java.io.Serializable;
 public class GDP implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    public static final String SeeleId = String.format("Seele_%s", UUID.randomUUID().toString());
 }

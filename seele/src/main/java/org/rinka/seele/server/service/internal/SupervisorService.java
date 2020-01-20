@@ -4,6 +4,8 @@
  */
 package org.rinka.seele.server.service.internal;
 
+import org.rinka.seele.server.connect.rest.CallableSupervisor;
+
 import java.util.Map;
 
 /**
@@ -12,9 +14,11 @@ import java.util.Map;
  */
 public interface SupervisorService {
 
-    boolean registerSupervisor(String namespace, Map<String, String> supervisorDescriptor);
+    void registerSupervisor(String namespace, String supervisorId, String host, String callback, String fallback);
 
     boolean unregisterSupervisor(String namespace, String supervisorId);
 
     boolean clearNamespace(String namespace);
+
+    CallableSupervisor get(String namespace);
 }

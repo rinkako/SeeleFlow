@@ -7,6 +7,7 @@ package org.rinka.seele.server.connect.ws;
 import com.corundumstudio.socketio.Configuration;
 import com.corundumstudio.socketio.SocketIOServer;
 import org.rinka.seele.server.connect.ws.listener.*;
+import org.rinka.seele.server.engine.resourcing.participant.agent.MetadataPackage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -71,7 +72,7 @@ public class SeeleSocketIOServer {
         this.server.addEventListener(EVENT_RSResponseMeta, String.class, this.eventListener);
         this.server.addEventListener(EVENT_HeartBeatEvent, String.class, this.heartbeatListener);
         this.server.addEventListener(EVENT_HeartBeatEvent, String.class, this.systemListener);
-        this.server.addEventListener(EVENT_RSSystemResponse, String.class, this.metaListener);
+        this.server.addEventListener(EVENT_RSSystemResponse, MetadataPackage.class, this.metaListener);
         this.server.start();
     }
 }

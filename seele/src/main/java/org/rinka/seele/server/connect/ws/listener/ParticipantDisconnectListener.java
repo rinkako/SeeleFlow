@@ -6,6 +6,7 @@ package org.rinka.seele.server.connect.ws.listener;
 
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.listener.DisconnectListener;
+import io.netty.handler.codec.http.HttpHeaders;
 import lombok.extern.slf4j.Slf4j;
 import org.rinka.seele.server.connect.ws.ParticipantSocketPool;
 import org.rinka.seele.server.connect.ws.SeeleSocketIOServer;
@@ -22,11 +23,13 @@ public class ParticipantDisconnectListener implements DisconnectListener {
 
     @Override
     public void onDisconnect(SocketIOClient client) {
-        String participantId = client.getHandshakeData().getHttpHeaders().get(SeeleSocketIOServer.HEADER_ParticipantId);
+        HttpHeaders headers = client.getHandshakeData().getHttpHeaders();
+        String namespace = headers.get(SeeleSocketIOServer.HEADER_Namespace);
+        String participantId = headers.get(SeeleSocketIOServer.HEADER_ParticipantId);
         if (StringUtils.isEmpty(participantId)) {
             log.warn("A participant disconnect from Seele, but participant-id not found");
         } else {
-            ParticipantSocketPool.remove(participantId);
+            ParticipantSocketPool.remove(namespace, participantId);
         }
         log.info("A participant disconnected from Seele-Server: " + client.getSessionId());
     }

@@ -19,4 +19,8 @@ public class SupervisorRestPool {
     public static SupervisorGroup namespace(String namespace) {
         return SupervisorRestPool.pool.computeIfAbsent(namespace, s -> new SupervisorGroup(namespace));
     }
+
+    public static Optional<SupervisorGroup> remove(String namespace) {
+        return Optional.ofNullable(SupervisorRestPool.pool.remove(namespace));
+    }
 }

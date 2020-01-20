@@ -6,11 +6,8 @@ package org.rinka.seele.server.connect.rest;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -35,15 +32,30 @@ public class SupervisorGroup {
         this.namespace = namespace;
     }
 
-    public void add(String supervisorId, HashMap<String, String> descriptor) {
-        this.supervisors.put(supervisorId, new CallableSupervisor(supervisorId,
-                descriptor.get(KEY_HOST), descriptor.get(KEY_CALLBACK), descriptor.get(KEY_FALLBACK)));
+    public void add(String supervisorId, String host, String callback, String fallback) {
+        this.supervisors.put(supervisorId, new CallableSupervisor(supervisorId, host, callback, fallback));
     }
 
     public Optional<CallableSupervisor> get(String supervisorId) {
         CallableSupervisor cs = this.supervisors.get(supervisorId);
         if (cs == null) {
-            log.error("Try to callback a supervisor but not exist in pool: " + supervisorId);
+            log.warn("Try to callback a supervisor but not exist in pool: " + supervisorId);
+        }
+        return Optional.ofNullable(cs);
+    }
+
+    public Optional<CallableSupervisor> get() {
+        if (this.supervisors.size() == 0) {
+            return Optional.empty();
+        }
+        CallableSupervisor cs = this.supervisors.values().iterator().next();
+        return Optional.ofNullable(cs);
+    }
+
+    public Optional<CallableSupervisor> remove(String supervisorId) {
+        CallableSupervisor cs = this.supervisors.remove(supervisorId);
+        if (cs == null) {
+            log.warn("Try to callback a supervisor but not exist in pool: " + supervisorId);
         }
         return Optional.ofNullable(cs);
     }
