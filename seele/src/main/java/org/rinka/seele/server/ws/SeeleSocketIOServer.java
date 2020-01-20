@@ -21,6 +21,7 @@ import javax.annotation.PostConstruct;
 @Component
 public class SeeleSocketIOServer {
 
+    public static final String HEADER_Namespace = "namespace";
     public static final String HEADER_AuthToken = "token";
     public static final String HEADER_ParticipantId = "participant-id";
 

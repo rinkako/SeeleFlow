@@ -177,10 +177,10 @@ public abstract class Selector implements Comparable<Selector>, Serializable {
         this.argsDict = argsDict;
     }
 
-    /**
-     * Apply principle to configure selector.
-     */
-    protected abstract void ApplyPrinciple();
+//    /**
+//     * Apply principle to configure selector.
+//     */
+//     protected abstract void ApplyPrinciple();
 
     /**
      * Evaluate an ArrayList of HashSet according to a operation description string.

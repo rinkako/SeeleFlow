@@ -5,15 +5,13 @@
  */
 package org.rinka.seele.server.engine.resourcing.participant;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.rinka.seele.server.engine.resourcing.RSContext;
 
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Class : ParticipantContext
@@ -29,6 +27,13 @@ public class ParticipantContext extends RSContext {
     public static final String DESC_SKILL = "skill";
     public static final String DESC_REST_ENTRY = "rest_entry";
     public static final String DESC_REST_URI = "rest_uri";
+
+    @Getter
+    @Setter(value = AccessLevel.PRIVATE)
+    private AtomicInteger handlingWorkitemCount = new AtomicInteger(0);
+    @Getter
+    @Setter(value = AccessLevel.PRIVATE)
+    private AtomicInteger handledWorkitemCount = new AtomicInteger(0);
 
     /**
      * Participant global id.
@@ -78,7 +83,11 @@ public class ParticipantContext extends RSContext {
      *
      * @param skills a List contains skill descriptors
      */
-    public void addSkills(List<String> skills) {
+    public void addSkills(Collection<String> skills) {
         this.skill.addAll(skills);
+    }
+
+    public void addSkill(String skill) {
+        this.skill.add(skill);
     }
 }
