@@ -3,11 +3,10 @@
  * Author : Rinka
  * Date   : 2020/1/1
  */
-package org.rinka.seele.server.service;
+package org.rinka.seele.server.service.web;
 
 import org.rinka.seele.server.dao.UserRepository;
 import org.rinka.seele.server.entity.User;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

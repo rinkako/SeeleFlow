@@ -6,7 +6,7 @@
 package org.rinka.seele.server.api;
 
 import org.rinka.seele.server.entity.User;
-import org.rinka.seele.server.service.UserAuthService;
+import org.rinka.seele.server.service.web.UserAuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

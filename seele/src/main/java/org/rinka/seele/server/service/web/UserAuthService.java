@@ -3,12 +3,12 @@
  * Author : Rinka
  * Date   : 2020/1/1
  */
-package org.rinka.seele.server.service;
+package org.rinka.seele.server.service.web;
 
 import org.rinka.seele.server.entity.User;
 
 import java.util.List;
 
 public interface UserAuthService {
-    public List<User> getAllValidUser();
+    List<User> getAllValidUser();
 }
