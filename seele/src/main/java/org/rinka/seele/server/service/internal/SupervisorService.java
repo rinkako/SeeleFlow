@@ -6,7 +6,7 @@ package org.rinka.seele.server.service.internal;
 
 import org.rinka.seele.server.connect.rest.CallableSupervisor;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * Class : SupervisorService
@@ -17,6 +17,8 @@ public interface SupervisorService {
     void registerSupervisor(String namespace, String supervisorId, String host, String callback, String fallback);
 
     boolean unregisterSupervisor(String namespace, String supervisorId);
+
+    List<CallableSupervisor> listSupervisorsInNamespace(String namespace);
 
     boolean clearNamespace(String namespace);
 

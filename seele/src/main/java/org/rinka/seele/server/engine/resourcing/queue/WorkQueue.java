@@ -9,6 +9,8 @@ import lombok.Data;
 import org.rinka.seele.server.engine.resourcing.Workitem;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,14 +25,19 @@ public class WorkQueue implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
+     * Namespace
+     */
+    private String namespace;
+
+    /**
      * Queue global id.
      */
     private String queueId;
 
     /**
-     * Queue owner worker id, {@code GlobalContext.WORKQUEUE_ADMIN_PREFIX} if an admin queue.
+     * Queue owner participant id
      */
-    private String ownerWorkerId;
+    private String ownerParticipantId;
 
     /**
      * Queue type enum.
@@ -42,12 +49,17 @@ public class WorkQueue implements Serializable {
      */
     private ConcurrentHashMap<String, Workitem> workitems = new ConcurrentHashMap<>();
 
+    public Workitem get(String wid) {
+        return this.workitems.get(wid);
+    }
+
     /**
      * Add or update a workitem to this queue.
      *
      * @param workitem workitem entity.
      */
     public void addOrUpdate(Workitem workitem) {
+        workitem.getEntity().setQueueId(this.queueId);
         // TODO
     }
 
@@ -66,8 +78,8 @@ public class WorkQueue implements Serializable {
      *
      * @param workitem workitem context
      */
-    public void Remove(Workitem workitem) {
-        // TODO
+    public void remove(Workitem workitem) {
+
     }
 
     /**
@@ -75,7 +87,7 @@ public class WorkQueue implements Serializable {
      *
      * @param queue the queue of items to remove
      */
-    public void RemoveFromQueue(WorkQueue queue) {
+    public void removeFromQueue(WorkQueue queue) {
         // TODO
     }
 
@@ -84,7 +96,7 @@ public class WorkQueue implements Serializable {
      *
      * @param rtid process rtid
      */
-    public void RemoveByRTID(String rtid) {
+    public void removeByRTID(String rtid) {
         // TODO
     }
 
@@ -94,8 +106,7 @@ public class WorkQueue implements Serializable {
      * @return true if queue empty
      */
     public boolean isEmpty() {
-        // TODO
-        return false;
+        return this.workitems.size() == 0;
     }
 
     /**
@@ -104,15 +115,18 @@ public class WorkQueue implements Serializable {
      * @return number of workitems in this queue
      */
     public int count() {
-        // TODO
-        return 0;
+        return this.workitems.size();
     }
 
     /**
      * Clear the queue, remove all entries.
      */
     public void clear() {
-        // TODO
+        this.workitems.clear();
+    }
+
+    public boolean contains(String workitemId) {
+        return this.workitems.containsKey(workitemId);
     }
 
     /**
@@ -120,9 +134,8 @@ public class WorkQueue implements Serializable {
      *
      * @return all members of the queue as a HashMap of (workitemId, workitemObject)
      */
-    public Map<String, Workitem> asMap() {
-        // TODO
-        return null;
+    public Map<String, Workitem> copyToMap() {
+        return new HashMap<>(this.workitems);
     }
 
     /**
@@ -130,18 +143,8 @@ public class WorkQueue implements Serializable {
      *
      * @return all members of the queue as a HashSet
      */
-    public Set<Workitem> asSet() {
-        // TODO
-        return null;
-    }
-
-    /**
-     * Remove a workitem from all queue.
-     *
-     * @param workitem workitem context
-     */
-    public static void removeFromAllWorkQueue(Workitem workitem) {
-        // TODO
+    public Set<Workitem> copyToSet() {
+        return new HashSet<>(this.workitems.values());
     }
 
     /**
@@ -149,21 +152,15 @@ public class WorkQueue implements Serializable {
      *
      * @param ownerWorkerId queue owner worker id
      * @param queueType     queue type enum
-     * @param forceReload   force reload from steady and refresh cache
      * @return a workqueue context
      */
-    public static WorkQueue of(String ownerWorkerId, WorkQueueType queueType, boolean forceReload) {
-        // TODO
-        return null;
-    }
-
-    /**
-     * Write resource event log to steady.
-     *
-     * @param workitem workitem context
-     */
-    private void LogEvent(Workitem workitem) {
-        // TODO
+    public static WorkQueue of(String namespace, String ownerWorkerId, WorkQueueType queueType) {
+        WorkQueue workQueue = new WorkQueue();
+        workQueue.ownerParticipantId = ownerWorkerId;
+        workQueue.namespace = namespace;
+        workQueue.type = queueType;
+        workQueue.queueId = String.format("%s&%s&%s", namespace, ownerWorkerId, queueType.name());
+        return workQueue;
     }
 
     /**
@@ -173,20 +170,5 @@ public class WorkQueue implements Serializable {
      */
     private static void syncSteady() {
         // TODO
-    }
-
-    /**
-     * Create a new work queue context.
-     * NOTICE that usually this method should not be called unless <b>worklisted</b> queue.
-     *
-     * @param id            work queue global id
-     * @param ownerWorkerId owner worker global id
-     * @param type          queue type enum
-     */
-    public WorkQueue(String id, String ownerWorkerId, WorkQueueType type) {
-        this.queueId = id;
-        this.ownerWorkerId = ownerWorkerId;
-        this.type = type;
-        // here no need for queued workitem refresh, any GET methods will refresh automatically.
     }
 }

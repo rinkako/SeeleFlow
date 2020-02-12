@@ -1,6 +1,6 @@
 /*
  * Author : Rinka
- * Date   : 2020/1/20
+ * Date   : 2020/2/12
  */
 package org.rinka.seele.server.api.form;
 
@@ -11,17 +11,14 @@ import lombok.ToString;
 import javax.validation.constraints.NotNull;
 
 /**
- * Class : SupervisorUnregisterForm
+ * Class : NamespaceForm
  * Usage :
  */
 @Data
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public class SupervisorUnregisterForm extends NamespaceForm {
+public class NamespaceForm extends SeeleRestForm {
 
     @NotNull
     private String namespace;
-
-    @NotNull
-    private String supervisorId;
 }

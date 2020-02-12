@@ -6,7 +6,8 @@
 package org.rinka.seele.server.engine.resourcing.participant;
 
 import lombok.*;
-import org.rinka.seele.server.engine.resourcing.RSContext;
+import org.rinka.seele.server.engine.resourcing.context.RSContext;
+import org.rinka.seele.server.engine.resourcing.queue.WorkQueueContainer;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -18,8 +19,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Usage :
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class ParticipantContext extends RSContext {
 
@@ -34,6 +33,12 @@ public class ParticipantContext extends RSContext {
     @Getter
     @Setter(value = AccessLevel.PRIVATE)
     private AtomicInteger handledWorkitemCount = new AtomicInteger(0);
+
+    @Getter
+    @Setter(value = AccessLevel.PRIVATE)
+    private WorkQueueContainer queueContainer;
+
+    private String namespace;
 
     /**
      * Participant global id.
@@ -89,5 +94,11 @@ public class ParticipantContext extends RSContext {
 
     public void addSkill(String skill) {
         this.skill.add(skill);
+    }
+
+    public ParticipantContext(String namespace, String participantId) {
+        this.namespace = namespace;
+        this.participantId = participantId;
+        this.queueContainer = new WorkQueueContainer(this.namespace, this.participantId);
     }
 }

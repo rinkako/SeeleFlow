@@ -69,10 +69,10 @@ public class SeeleSocketIOServer {
         this.server = new SocketIOServer(config);
         this.server.addConnectListener(this.connectListener);
         this.server.addDisconnectListener(this.disconnectListener);
-        this.server.addEventListener(EVENT_RSResponseMeta, String.class, this.eventListener);
+        this.server.addEventListener(EVENT_RSEvent, String.class, this.eventListener);
         this.server.addEventListener(EVENT_HeartBeatEvent, String.class, this.heartbeatListener);
-        this.server.addEventListener(EVENT_HeartBeatEvent, String.class, this.systemListener);
-        this.server.addEventListener(EVENT_RSSystemResponse, MetadataPackage.class, this.metaListener);
+        this.server.addEventListener(EVENT_RSSystemResponse, String.class, this.systemListener);
+        this.server.addEventListener(EVENT_RSResponseMeta, MetadataPackage.class, this.metaListener);
         this.server.start();
     }
 }

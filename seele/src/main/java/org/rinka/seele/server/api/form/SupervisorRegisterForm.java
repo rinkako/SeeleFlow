@@ -17,10 +17,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public class SupervisorRegisterForm extends SeeleRestForm {
-
-    @NotNull
-    private String namespace;
+public class SupervisorRegisterForm extends NamespaceForm {
 
     @NotNull
     private String supervisorId;

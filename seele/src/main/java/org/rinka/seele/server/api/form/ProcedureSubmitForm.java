@@ -17,10 +17,10 @@ import javax.validation.constraints.NotNull;
 @Data
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public class ProcedureSubmitForm extends SeeleRestForm {
+public class ProcedureSubmitForm extends NamespaceForm {
 
     @NotNull
-    private String namespace;
+    private String requestId;
 
     @NotNull
     private String supervisorId;
@@ -29,7 +29,13 @@ public class ProcedureSubmitForm extends SeeleRestForm {
     private String submitType = "direct";
 
     @NotNull
-    private String procedureType;
+    private String taskName;
+
+    @NotNull
+    private String skillRequirement;
+
+    @NotNull
+    private String principleDescriptor;
 
     private String args;
 }

@@ -5,10 +5,13 @@
  */
 package org.rinka.seele.server.engine.resourcing;
 
+import org.rinka.seele.server.engine.resourcing.principle.Principle;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 /**
  * Class : Selector
@@ -20,14 +23,18 @@ public abstract class Selector implements Comparable<Selector>, Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * TODO: Resourcing principle.
+     * Resourcing principle.
      */
-    protected Object principle;
+    protected Principle principle;
 
     /**
      * Create a new Selector.
      */
     public Selector() { }
+
+    public Selector init(Map parameters) {
+        return this;
+    }
 
     /**
      * Create a new Selector.
