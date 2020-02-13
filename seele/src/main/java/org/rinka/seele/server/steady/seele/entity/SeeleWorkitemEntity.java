@@ -21,6 +21,7 @@ public class SeeleWorkitemEntity {
     private long id;
     private String wid;
     private long taskId;
+    private String taskName;
     private String requestId;
     private String queueId;
     private String arguments;
@@ -64,6 +65,16 @@ public class SeeleWorkitemEntity {
     }
 
     @Basic
+    @Column(name = "task_name", nullable = false)
+    public String getTaskName() {
+        return taskName;
+    }
+
+    public void setTaskName(String taskName) {
+        this.taskName = taskName;
+    }
+
+    @Basic
     @Column(name = "request_id", nullable = true, length = 37)
     public String getRequestId() {
         return requestId;
@@ -74,7 +85,7 @@ public class SeeleWorkitemEntity {
     }
 
     @Basic
-    @Column(name = "queue_id", nullable = false)
+    @Column(name = "queue_id", nullable = true)
     public String getQueueId() {
         return queueId;
     }
@@ -170,7 +181,8 @@ public class SeeleWorkitemEntity {
         SeeleWorkitemEntity that = (SeeleWorkitemEntity) o;
         return id == that.id &&
                 taskId == that.taskId &&
-                queueId == that.queueId &&
+                Objects.equals(taskName, that.taskName) &&
+                Objects.equals(queueId, that.queueId) &&
                 Objects.equals(wid, that.wid) &&
                 Objects.equals(requestId, that.requestId) &&
                 Objects.equals(arguments, that.arguments) &&
@@ -185,6 +197,6 @@ public class SeeleWorkitemEntity {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, wid, taskId, requestId, queueId, arguments, createTime, enableTime, startTime, completeTime, state, updatetime, newdate);
+        return Objects.hash(id, wid, taskId, taskName, requestId, queueId, arguments, createTime, enableTime, startTime, completeTime, state, updatetime, newdate);
     }
 }

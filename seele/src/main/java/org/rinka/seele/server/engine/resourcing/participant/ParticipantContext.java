@@ -5,9 +5,11 @@
  */
 package org.rinka.seele.server.engine.resourcing.participant;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import org.rinka.seele.server.engine.resourcing.context.RSContext;
 import org.rinka.seele.server.engine.resourcing.queue.WorkQueueContainer;
+import org.rinka.seele.server.steady.seele.repository.SeeleWorkitemRepository;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -27,13 +29,17 @@ public class ParticipantContext extends RSContext {
     public static final String DESC_REST_ENTRY = "rest_entry";
     public static final String DESC_REST_URI = "rest_uri";
 
+    @JsonIgnore
     @Getter
     @Setter(value = AccessLevel.PRIVATE)
     private AtomicInteger handlingWorkitemCount = new AtomicInteger(0);
+
+    @JsonIgnore
     @Getter
     @Setter(value = AccessLevel.PRIVATE)
     private AtomicInteger handledWorkitemCount = new AtomicInteger(0);
 
+    @JsonIgnore
     @Getter
     @Setter(value = AccessLevel.PRIVATE)
     private WorkQueueContainer queueContainer;

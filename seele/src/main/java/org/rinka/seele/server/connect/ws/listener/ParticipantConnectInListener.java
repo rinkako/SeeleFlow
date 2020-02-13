@@ -34,6 +34,8 @@ public class ParticipantConnectInListener implements ConnectListener {
         } else {
             ParticipantSocketPool.add(namespace, participantId, client);
             client.sendEvent("connected", "hello");
+            log.info("require meta for client: " + client.getSessionId());
+            client.sendEvent(SeeleSocketIOServer.EVENT_RSRequireMeta, "meta need");
         }
     }
 }

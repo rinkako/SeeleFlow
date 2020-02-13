@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class SupervisorTelepathy {
 
-    public static final String KEY_RESPONSE_CODE = "200";
+    public static final String KEY_RESPONSE_CODE = "code";
     public static final String KEY_RESPONSE_MSG = "msg";
 
     @Autowired
@@ -84,11 +84,12 @@ public class SupervisorTelepathy {
     }
 
     private void doPost(String cbUrl, Map<String, Object> payload) throws Exception {
-        ResponseEntity<HashMap> resp = rest.postForEntity(cbUrl, payload, HashMap.class);
+        ResponseEntity<String> resp = rest.postForEntity(cbUrl, payload, String.class);
         if (resp.getStatusCode() != HttpStatus.OK) {
             throw new Exception("http rest status code not 200: " + resp.getStatusCode().toString());
         }
-        HashMap respBody = resp.getBody();
+        String respBodyRaw = resp.getBody();
+        Map respBody = JsonUtil.parse(respBodyRaw.toString(), Map.class);
         String bodyCode = respBody.getOrDefault(KEY_RESPONSE_CODE, "-1").toString();
         String msg = respBody.getOrDefault(KEY_RESPONSE_MSG, "NULL").toString();
         if (!bodyCode.equals("200")) {

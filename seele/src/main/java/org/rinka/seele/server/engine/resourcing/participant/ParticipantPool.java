@@ -66,7 +66,10 @@ public class ParticipantPool {
         public Set<ParticipantContext> getSkilledParticipants(String... skills) {
             Set<ParticipantContext> result = new HashSet<>();
             for (String skill : skills) {
-                result.addAll(this.skilledPool.get(skill));
+                HashSet<ParticipantContext> skilled = this.skilledPool.get(skill);
+                if (skilled != null) {
+                    result.addAll(skilled);
+                }
             }
             return result;
         }

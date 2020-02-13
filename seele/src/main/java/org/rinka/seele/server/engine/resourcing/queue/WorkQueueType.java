@@ -12,6 +12,7 @@ public enum WorkQueueType {
     UNDEFINED,
     OFFERED,
     ALLOCATED,
+    ACCEPTED,
     STARTED,
     SUSPENDED,
     UNOFFERED,

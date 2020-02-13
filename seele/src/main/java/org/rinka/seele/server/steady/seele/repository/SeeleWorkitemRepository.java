@@ -12,4 +12,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * Usage :
  */
 public interface SeeleWorkitemRepository extends JpaRepository<SeeleWorkitemEntity, Long> {
+
+    SeeleWorkitemEntity findByWid(String wid);
 }

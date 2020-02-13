@@ -12,11 +12,13 @@ import org.rinka.seele.server.GDP;
 import org.rinka.seele.server.connect.rest.CallableSupervisor;
 import org.rinka.seele.server.connect.rest.SupervisorRestPool;
 import org.rinka.seele.server.connect.rest.SupervisorTelepathy;
+import org.rinka.seele.server.connect.ws.ParticipantTelepathy;
 import org.rinka.seele.server.engine.resourcing.allocator.Allocator;
 import org.rinka.seele.server.engine.resourcing.context.TaskContext;
 import org.rinka.seele.server.engine.resourcing.participant.ParticipantContext;
 import org.rinka.seele.server.engine.resourcing.participant.ParticipantPool;
 import org.rinka.seele.server.engine.resourcing.principle.Principle;
+import org.rinka.seele.server.engine.resourcing.queue.WorkQueueContainer;
 import org.rinka.seele.server.engine.resourcing.queue.WorkQueueType;
 import org.rinka.seele.server.steady.seele.repository.SeeleWorkitemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +38,10 @@ import java.util.Set;
 public class RSInteraction {
 
     @Autowired
-    private SupervisorTelepathy telepathy;
+    private SupervisorTelepathy supervisorTelepathy;
+
+    @Autowired
+    private ParticipantTelepathy participantTelepathy;
 
     @Autowired
     private SeeleWorkitemRepository workitemRepository;
@@ -51,17 +56,33 @@ public class RSInteraction {
         Set<ParticipantContext> candidates = ParticipantPool
                 .namespace(context.getNamespace())
                 .getSkilledParticipants(skillRequired);
-        // perform interaction
-        switch (principle.getDispatchType()) {
-            case ALLOCATE:
-                Allocator allocator = SelectorReflector.ReflectAllocator(principle.getDispatcherName());
-                ParticipantContext chosenOne = allocator.performAllocate(candidates, workitem);
-                chosenOne.getQueueContainer().addToQueue(workitem, WorkQueueType.ALLOCATED);
-                break;
-            case OFFER:
-                throw new Exception("NotImplemented");
+        // bad allocation
+        if (candidates.size() == 0) {
+            log.error("Bad allocation occurred, WI is: " + workitem.toString());
+            workitem.markBadAllocated();
+        } else {
+            // perform interaction
+            switch (principle.getDispatchType()) {
+                case ALLOCATE:
+                    Allocator allocator = SelectorReflector.ReflectAllocator(principle.getDispatcherName());
+                    ParticipantContext chosenOne = allocator.performAllocate(candidates, workitem);
+                    WorkQueueContainer container = chosenOne.getQueueContainer();
+                    container.setRepository(this.workitemRepository);
+                    container.addToQueue(workitem, WorkQueueType.ALLOCATED);
+                    int handlingCount = chosenOne.getHandlingWorkitemCount().incrementAndGet();
+                    this.participantTelepathy.NotifyWorkitemAllocated(chosenOne, workitem);
+                    log.info(String.format("Supervisor `%s`(NS:%s) submitted raw task [%s] with %s, " +
+                                    "Seele allocated it to participant [%s], with running workitem count: %s",
+                            context.getSupervisorId(), context.getNamespace(), context.getTaskName(),
+                            context.getPrinciple(), chosenOne.getDisplayName(), handlingCount));
+                    break;
+                case OFFER:
+                    throw new Exception("NotImplemented");
+            }
         }
         // notify supervisor
+        log.info(String.format("Prepare to notify supervisor `%s`(NS:%s) about resourcing",
+                context.getSupervisorId(), context.getNamespace()));
         Optional<CallableSupervisor> supervisor = SupervisorRestPool
                 .namespace(context.getNamespace())
                 .get(context.getSupervisorId());
@@ -69,6 +90,8 @@ public class RSInteraction {
             CallableSupervisor callableSupervisor = supervisor.get();
             this.transitionReply(context.getRequestId(), callableSupervisor, workitem, "NONE", null);
         }
+        log.info(String.format("Notified supervisor `%s`(NS:%s) about resourcing",
+                context.getSupervisorId(), context.getNamespace()));
         return workitem;
     }
 
@@ -83,7 +106,7 @@ public class RSInteraction {
         transitionReply.setWorkitemPreviousState(prevStateName);
         transitionReply.setRequestId(requestId);
         transitionReply.setPayload(payload);
-        this.telepathy.callback(supervisor, transitionReply);
+        this.supervisorTelepathy.callback(supervisor, transitionReply);
     }
 
     @Data

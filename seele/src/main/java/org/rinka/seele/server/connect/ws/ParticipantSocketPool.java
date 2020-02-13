@@ -29,6 +29,11 @@ public class ParticipantSocketPool {
         return scopedPool.remove(participantId);
     }
 
+    public static SocketIOClient get(String namespace, String participantId) {
+        ConcurrentHashMap<String, SocketIOClient> scopedPool = ParticipantSocketPool.pool.computeIfAbsent(namespace, s -> new ConcurrentHashMap<>());
+        return scopedPool.get(participantId);
+    }
+
     public static void clear(String namespace) {
         ParticipantSocketPool.pool.remove(namespace);
     }

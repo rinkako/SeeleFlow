@@ -6,6 +6,7 @@ package org.rinka.seele.server.engine.resourcing.queue;
 
 import lombok.extern.slf4j.Slf4j;
 import org.rinka.seele.server.engine.resourcing.Workitem;
+import org.rinka.seele.server.steady.seele.repository.SeeleWorkitemRepository;
 
 import java.util.Set;
 
@@ -16,6 +17,8 @@ import java.util.Set;
 @Slf4j
 public class WorkQueueContainer {
 
+    private SeeleWorkitemRepository repository;
+
     /**
      * Participant offered workitem queue.
      */
@@ -25,6 +28,11 @@ public class WorkQueueContainer {
      * Participant allocated workitem queue.
      */
     private WorkQueue allocatedQueue;
+
+    /**
+     * Participant accepted workitem queue.
+     */
+    private WorkQueue acceptedQueue;
 
     /**
      * Participant started workitem queue.
@@ -56,7 +64,7 @@ public class WorkQueueContainer {
      *
      * @param workitem workitem context
      */
-    public void moveOfferedToAllocated(Workitem workitem) {
+    public void moveOfferedToAllocated(Workitem workitem) throws Exception {
         this.move(workitem, WorkQueueType.OFFERED, WorkQueueType.ALLOCATED);
     }
 
@@ -65,7 +73,7 @@ public class WorkQueueContainer {
      *
      * @param workitem workitem context
      */
-    public void moveAllocatedToOffered(Workitem workitem) {
+    public void moveAllocatedToOffered(Workitem workitem) throws Exception {
         this.move(workitem, WorkQueueType.ALLOCATED, WorkQueueType.OFFERED);
     }
 
@@ -74,7 +82,7 @@ public class WorkQueueContainer {
      *
      * @param workitem workitem context
      */
-    public void moveOfferedToStarted(Workitem workitem) {
+    public void moveOfferedToStarted(Workitem workitem) throws Exception {
         this.move(workitem, WorkQueueType.OFFERED, WorkQueueType.STARTED);
     }
 
@@ -83,7 +91,7 @@ public class WorkQueueContainer {
      *
      * @param workitem workitem context
      */
-    public void moveStartedToOffered(Workitem workitem) {
+    public void moveStartedToOffered(Workitem workitem) throws Exception {
         this.move(workitem, WorkQueueType.STARTED, WorkQueueType.OFFERED);
     }
 
@@ -92,7 +100,7 @@ public class WorkQueueContainer {
      *
      * @param workitem workitem context
      */
-    public void moveAllocatedToStarted(Workitem workitem) {
+    public void moveAllocatedToStarted(Workitem workitem) throws Exception {
         this.move(workitem, WorkQueueType.ALLOCATED, WorkQueueType.STARTED);
     }
 
@@ -101,7 +109,7 @@ public class WorkQueueContainer {
      *
      * @param workitem workitem context
      */
-    public void moveStartedToAllocated(Workitem workitem) {
+    public void moveStartedToAllocated(Workitem workitem) throws Exception {
         this.move(workitem, WorkQueueType.STARTED, WorkQueueType.ALLOCATED);
     }
 
@@ -110,7 +118,7 @@ public class WorkQueueContainer {
      *
      * @param workitem workitem context
      */
-    public void moveStartedToSuspend(Workitem workitem) {
+    public void moveStartedToSuspend(Workitem workitem) throws Exception {
         this.move(workitem, WorkQueueType.STARTED, WorkQueueType.SUSPENDED);
     }
 
@@ -119,7 +127,7 @@ public class WorkQueueContainer {
      *
      * @param workitem workitem context
      */
-    public void moveSuspendToStarted(Workitem workitem) {
+    public void moveSuspendToStarted(Workitem workitem) throws Exception {
         this.move(workitem, WorkQueueType.SUSPENDED, WorkQueueType.STARTED);
     }
 
@@ -131,7 +139,7 @@ public class WorkQueueContainer {
      * @param from     from queue type
      * @param to       to queue type
      */
-    public void move(Workitem workitem, WorkQueueType from, WorkQueueType to) {
+    public void move(Workitem workitem, WorkQueueType from, WorkQueueType to) throws Exception {
         this.removeFromQueue(workitem, from);
         this.addToQueue(workitem, to);
     }
@@ -142,7 +150,7 @@ public class WorkQueueContainer {
      * @param workitem workitem context
      * @param type     queue type
      */
-    public void addToQueue(Workitem workitem, WorkQueueType type) {
+    public void addToQueue(Workitem workitem, WorkQueueType type) throws Exception {
         WorkQueue wq = this.getQueue(type);
         wq.addOrUpdate(workitem);
     }
@@ -153,7 +161,7 @@ public class WorkQueueContainer {
      * @param addQueue workitem context queue to add
      * @param type     queue type
      */
-    public void addToQueue(WorkQueue addQueue, WorkQueueType type) {
+    public void addToQueue(WorkQueue addQueue, WorkQueueType type) throws Exception {
         WorkQueue wq = this.getQueue(type);
         wq.addFromQueue(addQueue);
     }
@@ -164,8 +172,8 @@ public class WorkQueueContainer {
      * @param workitem workitem context
      * @param type     queue type
      */
-    public void removeFromQueue(Workitem workitem, WorkQueueType type) {
-        this.getQueue(type).remove(workitem);
+    public Workitem removeFromQueue(Workitem workitem, WorkQueueType type) {
+        return this.getQueue(type).remove(workitem);
     }
 
     /**
@@ -304,22 +312,27 @@ public class WorkQueueContainer {
         switch (type) {
             case OFFERED:
                 if (this.offeredQueue == null) {
-                    this.offeredQueue = WorkQueue.of(this.namespace, this.ownerWorkerId, type);
+                    this.offeredQueue = WorkQueue.of(this.repository, this.namespace, this.ownerWorkerId, type);
                 }
                 return this.offeredQueue;
             case ALLOCATED:
                 if (this.allocatedQueue == null) {
-                    this.allocatedQueue = WorkQueue.of(this.namespace, this.ownerWorkerId, type);
+                    this.allocatedQueue = WorkQueue.of(this.repository, this.namespace, this.ownerWorkerId, type);
                 }
                 return this.allocatedQueue;
+            case ACCEPTED:
+                if (this.acceptedQueue == null) {
+                    this.acceptedQueue = WorkQueue.of(this.repository, this.namespace, this.ownerWorkerId, type);
+                }
+                return this.acceptedQueue;
             case STARTED:
                 if (this.startedQueue == null) {
-                    this.startedQueue = WorkQueue.of(this.namespace, this.ownerWorkerId, type);
+                    this.startedQueue = WorkQueue.of(this.repository, this.namespace, this.ownerWorkerId, type);
                 }
                 return this.startedQueue;
             case SUSPENDED:
                 if (this.suspendedQueue == null) {
-                    this.suspendedQueue = WorkQueue.of(this.namespace, this.ownerWorkerId, type);
+                    this.suspendedQueue = WorkQueue.of(this.repository, this.namespace, this.ownerWorkerId, type);
                 }
                 return this.suspendedQueue;
         }
@@ -359,6 +372,10 @@ public class WorkQueueContainer {
      */
     public WorkQueueContainerType getType() {
         return this.type;
+    }
+
+    public void setRepository(SeeleWorkitemRepository repository) {
+        this.repository = repository;
     }
 
     public enum WorkQueueContainerType {

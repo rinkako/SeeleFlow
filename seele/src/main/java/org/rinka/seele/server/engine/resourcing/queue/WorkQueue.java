@@ -7,6 +7,8 @@ package org.rinka.seele.server.engine.resourcing.queue;
 
 import lombok.Data;
 import org.rinka.seele.server.engine.resourcing.Workitem;
+import org.rinka.seele.server.steady.seele.entity.SeeleWorkitemEntity;
+import org.rinka.seele.server.steady.seele.repository.SeeleWorkitemRepository;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -23,6 +25,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Data
 public class WorkQueue implements Serializable {
     private static final long serialVersionUID = 1L;
+
+    private SeeleWorkitemRepository repository;
 
     /**
      * Namespace
@@ -58,9 +62,22 @@ public class WorkQueue implements Serializable {
      *
      * @param workitem workitem entity.
      */
-    public void addOrUpdate(Workitem workitem) {
-        workitem.getEntity().setQueueId(this.queueId);
-        // TODO
+    public void addOrUpdate(Workitem workitem) throws Exception {
+        SeeleWorkitemEntity workitemEntity = workitem.getEntity();
+        workitemEntity.setQueueId(this.queueId);
+        switch (this.type) {
+            case ALLOCATED:
+                workitem.setState(Workitem.ResourcingStateType.ALLOCATED);
+                break;
+            case ACCEPTED:
+                workitem.setState(Workitem.ResourcingStateType.ACCEPTED);
+                break;
+            case STARTED:
+                workitem.setState(Workitem.ResourcingStateType.RUNNING);
+                break;
+        }
+        workitem.flushSteady();
+        this.workitems.put(workitem.getWid(), workitem);
     }
 
     /**
@@ -69,8 +86,10 @@ public class WorkQueue implements Serializable {
      *
      * @param queue queue to be added
      */
-    public void addFromQueue(WorkQueue queue) {
-        // TODO
+    public void addFromQueue(WorkQueue queue) throws Exception {
+        for (Workitem w : queue.getWorkitems().values()) {
+            this.addOrUpdate(w);
+        }
     }
 
     /**
@@ -78,8 +97,8 @@ public class WorkQueue implements Serializable {
      *
      * @param workitem workitem context
      */
-    public void remove(Workitem workitem) {
-
+    public Workitem remove(Workitem workitem) {
+        return this.workitems.remove(workitem.getWid());
     }
 
     /**
@@ -88,7 +107,9 @@ public class WorkQueue implements Serializable {
      * @param queue the queue of items to remove
      */
     public void removeFromQueue(WorkQueue queue) {
-        // TODO
+        for (Workitem w : queue.getWorkitems().values()) {
+            this.remove(w);
+        }
     }
 
     /**
@@ -154,8 +175,9 @@ public class WorkQueue implements Serializable {
      * @param queueType     queue type enum
      * @return a workqueue context
      */
-    public static WorkQueue of(String namespace, String ownerWorkerId, WorkQueueType queueType) {
+    public static WorkQueue of(SeeleWorkitemRepository repository, String namespace, String ownerWorkerId, WorkQueueType queueType) {
         WorkQueue workQueue = new WorkQueue();
+        workQueue.repository = repository;
         workQueue.ownerParticipantId = ownerWorkerId;
         workQueue.namespace = namespace;
         workQueue.type = queueType;

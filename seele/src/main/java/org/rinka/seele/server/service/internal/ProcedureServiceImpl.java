@@ -12,6 +12,7 @@ import org.rinka.seele.server.engine.resourcing.context.TaskContext;
 import org.rinka.seele.server.engine.resourcing.principle.Principle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
@@ -26,6 +27,8 @@ public class ProcedureServiceImpl implements ProcedureService {
     @Autowired
     private RSInteraction interaction;
 
+    @Transactional
+    @Override
     public Workitem submitDirectProcedureForResourcing(String requestId,
                                                        String namespace,
                                                        String supervisorId,
