@@ -28,11 +28,14 @@ public class SeeleSocketIOServer {
 
     public static final String EVENT_RSSystemRequest = "__WF_RS_SYSTEM_EVT__";
     public static final String EVENT_RSSystemResponse = "__WF_RS_SYSTEM_RESPONSE_EVT__";
+    public static final String EVENT_RSParticipantRequest = "__WF_RS_PARTICIPANT_EVT__";
+    public static final String EVENT_RSParticipantResponse = "__WF_RS_PARTICIPANT_RESPONSE_EVT__";
     public static final String EVENT_RSEvent = "__WF_RS_DISPATCH_EVT__";
     public static final String EVENT_RSRequireMeta = "__WF_RS_REQUIRE_META__";
     public static final String EVENT_RSResponseMeta = "__WF_RS_RESPONSE_META__";
     public static final String EVENT_HeartBeatEvent = "__WF_HEARTBEAT_CLIENT_EVT__";
     public static final String EVENT_HeartBeatResponseEvent = "__WF_HEARTBEAT_RESPONSE_EVT__";
+    public static final String EVENT_RSParticipantLogging = "__WF_PARTICIPANT_LOGGING__";
 
     @Autowired
     private ParticipantAuthListener authListener;
@@ -55,6 +58,9 @@ public class SeeleSocketIOServer {
     @Autowired
     private ParticipantDataListener eventListener;
 
+    @Autowired
+    private ParticipantWorkitemLoggingListener workitemLoggingListener;
+
     @Value("${server.port}")
     private Integer listenPort;
 
@@ -73,6 +79,7 @@ public class SeeleSocketIOServer {
         this.server.addEventListener(EVENT_HeartBeatEvent, String.class, this.heartbeatListener);
         this.server.addEventListener(EVENT_RSSystemResponse, String.class, this.systemListener);
         this.server.addEventListener(EVENT_RSResponseMeta, MetadataPackage.class, this.metaListener);
+        this.server.addEventListener(EVENT_RSParticipantLogging, ParticipantWorkitemLoggingListener.RSLogEvent.class, this.workitemLoggingListener);
         this.server.start();
     }
 }

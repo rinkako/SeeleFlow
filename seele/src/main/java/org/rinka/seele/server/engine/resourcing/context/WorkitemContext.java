@@ -3,7 +3,7 @@
  * Author : Rinka
  * Date   : 2020/1/4
  */
-package org.rinka.seele.server.engine.resourcing;
+package org.rinka.seele.server.engine.resourcing.context;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.EqualsAndHashCode;
@@ -11,7 +11,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.rinka.seele.server.engine.resourcing.context.TaskContext;
 import org.rinka.seele.server.steady.seele.entity.SeeleWorkitemEntity;
 import org.rinka.seele.server.steady.seele.repository.SeeleWorkitemRepository;
 import org.rinka.seele.server.util.JsonUtil;
@@ -30,7 +29,7 @@ import java.util.UUID;
 @Slf4j
 @ToString
 @EqualsAndHashCode
-public class Workitem implements Serializable {
+public class WorkitemContext implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Getter
@@ -88,8 +87,8 @@ public class Workitem implements Serializable {
      */
     private Boolean supervisorAcknowledged = false;
 
-    public static Workitem createFrom(TaskContext task, SeeleWorkitemRepository repository) throws Exception {
-        Workitem workitem = new Workitem();
+    public static WorkitemContext createFrom(TaskContext task, SeeleWorkitemRepository repository) throws Exception {
+        WorkitemContext workitem = new WorkitemContext();
         workitem.namespace = task.getNamespace();
         workitem.args = task.getArgs();
         workitem.process = null;  // todo

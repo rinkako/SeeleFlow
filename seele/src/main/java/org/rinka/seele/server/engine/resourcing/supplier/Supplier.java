@@ -6,7 +6,7 @@
 package org.rinka.seele.server.engine.resourcing.supplier;
 
 import org.rinka.seele.server.engine.resourcing.Selector;
-import org.rinka.seele.server.engine.resourcing.Workitem;
+import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
 import org.rinka.seele.server.engine.resourcing.participant.ParticipantContext;
 
 import java.util.HashSet;
@@ -27,5 +27,5 @@ public abstract class Supplier extends Selector {
      * @param workitem     resourcing workitem
      * @return filtered participant set
      */
-    public abstract HashSet<ParticipantContext> performSupply(Set<ParticipantContext> candidateSet, Workitem workitem);
+    public abstract HashSet<ParticipantContext> performSupply(Set<ParticipantContext> candidateSet, WorkitemContext workitem);
 }

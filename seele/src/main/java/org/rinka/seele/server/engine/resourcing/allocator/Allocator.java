@@ -6,7 +6,7 @@
 package org.rinka.seele.server.engine.resourcing.allocator;
 
 import org.rinka.seele.server.engine.resourcing.Selector;
-import org.rinka.seele.server.engine.resourcing.Workitem;
+import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
 import org.rinka.seele.server.engine.resourcing.participant.ParticipantContext;
 
 import java.util.Set;
@@ -25,5 +25,5 @@ public abstract class Allocator extends Selector {
      * @param workitem     workitem context
      * @return selected participant
      */
-    public abstract ParticipantContext performAllocate(Set<ParticipantContext> candidateSet, Workitem workitem);
+    public abstract ParticipantContext performAllocate(Set<ParticipantContext> candidateSet, WorkitemContext workitem);
 }

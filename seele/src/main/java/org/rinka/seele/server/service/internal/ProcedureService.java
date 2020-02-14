@@ -4,7 +4,7 @@
  */
 package org.rinka.seele.server.service.internal;
 
-import org.rinka.seele.server.engine.resourcing.Workitem;
+import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
 
 import java.util.Map;
 
@@ -13,11 +13,11 @@ import java.util.Map;
  * Usage :
  */
 public interface ProcedureService {
-    Workitem submitDirectProcedureForResourcing(String requestId,
-                                                String namespace,
-                                                String supervisorId,
-                                                String taskName,
-                                                String principleDescriptor,
-                                                String skill,
-                                                Map<String, Object> args) throws Exception;
+    WorkitemContext submitDirectProcedureForResourcing(String requestId,
+                                                       String namespace,
+                                                       String supervisorId,
+                                                       String taskName,
+                                                       String principleDescriptor,
+                                                       String skill,
+                                                       Map<String, Object> args) throws Exception;
 }

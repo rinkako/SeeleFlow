@@ -4,7 +4,7 @@
  */
 package org.rinka.seele.server.engine.resourcing.allocator;
 
-import org.rinka.seele.server.engine.resourcing.Workitem;
+import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
 import org.rinka.seele.server.engine.resourcing.participant.ParticipantContext;
 
 import java.util.Set;
@@ -23,7 +23,7 @@ public class ShortestQueueAllocator extends Allocator {
      * @return selected participant
      */
     @Override
-    public ParticipantContext performAllocate(Set<ParticipantContext> candidateSet, Workitem workitem) {
+    public ParticipantContext performAllocate(Set<ParticipantContext> candidateSet, WorkitemContext workitem) {
         if (candidateSet.size() == 0) {
             return null;
         }

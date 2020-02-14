@@ -15,6 +15,7 @@ import org.rinka.seele.server.connect.rest.SupervisorTelepathy;
 import org.rinka.seele.server.connect.ws.ParticipantTelepathy;
 import org.rinka.seele.server.engine.resourcing.allocator.Allocator;
 import org.rinka.seele.server.engine.resourcing.context.TaskContext;
+import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
 import org.rinka.seele.server.engine.resourcing.participant.ParticipantContext;
 import org.rinka.seele.server.engine.resourcing.participant.ParticipantPool;
 import org.rinka.seele.server.engine.resourcing.principle.Principle;
@@ -47,9 +48,9 @@ public class RSInteraction {
     private SeeleWorkitemRepository workitemRepository;
 
     @Transactional
-    public Workitem supervisorSubmitTask(TaskContext context) throws Exception {
+    public WorkitemContext supervisorSubmitTask(TaskContext context) throws Exception {
         // generate workitem
-        Workitem workitem = Workitem.createFrom(context, workitemRepository);
+        WorkitemContext workitem = WorkitemContext.createFrom(context, workitemRepository);
         Principle principle = context.getPrinciple();
         String skillRequired = workitem.getSkill();
         // calculate candidate set
@@ -97,7 +98,7 @@ public class RSInteraction {
 
     private void transitionReply(String requestId,
                                  CallableSupervisor supervisor,
-                                 Workitem workitem,
+                                 WorkitemContext workitem,
                                  String prevStateName,
                                  Object payload) {
         TransitionReply transitionReply = new TransitionReply();

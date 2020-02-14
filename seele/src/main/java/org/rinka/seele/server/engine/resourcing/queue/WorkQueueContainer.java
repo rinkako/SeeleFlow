@@ -5,7 +5,7 @@
 package org.rinka.seele.server.engine.resourcing.queue;
 
 import lombok.extern.slf4j.Slf4j;
-import org.rinka.seele.server.engine.resourcing.Workitem;
+import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
 import org.rinka.seele.server.steady.seele.repository.SeeleWorkitemRepository;
 
 import java.util.Set;
@@ -64,7 +64,7 @@ public class WorkQueueContainer {
      *
      * @param workitem workitem context
      */
-    public void moveOfferedToAllocated(Workitem workitem) throws Exception {
+    public void moveOfferedToAllocated(WorkitemContext workitem) throws Exception {
         this.move(workitem, WorkQueueType.OFFERED, WorkQueueType.ALLOCATED);
     }
 
@@ -73,7 +73,7 @@ public class WorkQueueContainer {
      *
      * @param workitem workitem context
      */
-    public void moveAllocatedToOffered(Workitem workitem) throws Exception {
+    public void moveAllocatedToOffered(WorkitemContext workitem) throws Exception {
         this.move(workitem, WorkQueueType.ALLOCATED, WorkQueueType.OFFERED);
     }
 
@@ -82,7 +82,7 @@ public class WorkQueueContainer {
      *
      * @param workitem workitem context
      */
-    public void moveOfferedToStarted(Workitem workitem) throws Exception {
+    public void moveOfferedToStarted(WorkitemContext workitem) throws Exception {
         this.move(workitem, WorkQueueType.OFFERED, WorkQueueType.STARTED);
     }
 
@@ -91,7 +91,7 @@ public class WorkQueueContainer {
      *
      * @param workitem workitem context
      */
-    public void moveStartedToOffered(Workitem workitem) throws Exception {
+    public void moveStartedToOffered(WorkitemContext workitem) throws Exception {
         this.move(workitem, WorkQueueType.STARTED, WorkQueueType.OFFERED);
     }
 
@@ -100,7 +100,7 @@ public class WorkQueueContainer {
      *
      * @param workitem workitem context
      */
-    public void moveAllocatedToStarted(Workitem workitem) throws Exception {
+    public void moveAllocatedToStarted(WorkitemContext workitem) throws Exception {
         this.move(workitem, WorkQueueType.ALLOCATED, WorkQueueType.STARTED);
     }
 
@@ -109,7 +109,7 @@ public class WorkQueueContainer {
      *
      * @param workitem workitem context
      */
-    public void moveStartedToAllocated(Workitem workitem) throws Exception {
+    public void moveStartedToAllocated(WorkitemContext workitem) throws Exception {
         this.move(workitem, WorkQueueType.STARTED, WorkQueueType.ALLOCATED);
     }
 
@@ -118,7 +118,7 @@ public class WorkQueueContainer {
      *
      * @param workitem workitem context
      */
-    public void moveStartedToSuspend(Workitem workitem) throws Exception {
+    public void moveStartedToSuspend(WorkitemContext workitem) throws Exception {
         this.move(workitem, WorkQueueType.STARTED, WorkQueueType.SUSPENDED);
     }
 
@@ -127,7 +127,7 @@ public class WorkQueueContainer {
      *
      * @param workitem workitem context
      */
-    public void moveSuspendToStarted(Workitem workitem) throws Exception {
+    public void moveSuspendToStarted(WorkitemContext workitem) throws Exception {
         this.move(workitem, WorkQueueType.SUSPENDED, WorkQueueType.STARTED);
     }
 
@@ -139,7 +139,7 @@ public class WorkQueueContainer {
      * @param from     from queue type
      * @param to       to queue type
      */
-    public void move(Workitem workitem, WorkQueueType from, WorkQueueType to) throws Exception {
+    public void move(WorkitemContext workitem, WorkQueueType from, WorkQueueType to) throws Exception {
         this.removeFromQueue(workitem, from);
         this.addToQueue(workitem, to);
     }
@@ -150,7 +150,7 @@ public class WorkQueueContainer {
      * @param workitem workitem context
      * @param type     queue type
      */
-    public void addToQueue(Workitem workitem, WorkQueueType type) throws Exception {
+    public void addToQueue(WorkitemContext workitem, WorkQueueType type) throws Exception {
         WorkQueue wq = this.getQueue(type);
         wq.addOrUpdate(workitem);
     }
@@ -172,7 +172,7 @@ public class WorkQueueContainer {
      * @param workitem workitem context
      * @param type     queue type
      */
-    public Workitem removeFromQueue(Workitem workitem, WorkQueueType type) {
+    public WorkitemContext removeFromQueue(WorkitemContext workitem, WorkQueueType type) {
         return this.getQueue(type).remove(workitem);
     }
 
@@ -219,7 +219,7 @@ public class WorkQueueContainer {
      * @param type queue type
      * @return workitem hash set.
      */
-    public Set<Workitem> getQueuedWorkitem(WorkQueueType type) {
+    public Set<WorkitemContext> getQueuedWorkitem(WorkQueueType type) {
         return this.getQueue(type).copyToSet();
     }
 
@@ -256,7 +256,7 @@ public class WorkQueueContainer {
      * @param type       queue type
      * @return workitem context
      */
-    public Workitem get(String workitemId, WorkQueueType type) {
+    public WorkitemContext get(String workitemId, WorkQueueType type) {
         return this.getQueue(type).get(workitemId);
     }
 

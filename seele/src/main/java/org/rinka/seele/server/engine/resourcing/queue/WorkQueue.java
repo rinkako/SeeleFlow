@@ -6,7 +6,7 @@
 package org.rinka.seele.server.engine.resourcing.queue;
 
 import lombok.Data;
-import org.rinka.seele.server.engine.resourcing.Workitem;
+import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
 import org.rinka.seele.server.steady.seele.entity.SeeleWorkitemEntity;
 import org.rinka.seele.server.steady.seele.repository.SeeleWorkitemRepository;
 
@@ -51,9 +51,9 @@ public class WorkQueue implements Serializable {
     /**
      * Workitem in this queue, map in pattern (workitemId, workitemObject)
      */
-    private ConcurrentHashMap<String, Workitem> workitems = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, WorkitemContext> workitems = new ConcurrentHashMap<>();
 
-    public Workitem get(String wid) {
+    public WorkitemContext get(String wid) {
         return this.workitems.get(wid);
     }
 
@@ -62,18 +62,18 @@ public class WorkQueue implements Serializable {
      *
      * @param workitem workitem entity.
      */
-    public void addOrUpdate(Workitem workitem) throws Exception {
+    public void addOrUpdate(WorkitemContext workitem) throws Exception {
         SeeleWorkitemEntity workitemEntity = workitem.getEntity();
         workitemEntity.setQueueId(this.queueId);
         switch (this.type) {
             case ALLOCATED:
-                workitem.setState(Workitem.ResourcingStateType.ALLOCATED);
+                workitem.setState(WorkitemContext.ResourcingStateType.ALLOCATED);
                 break;
             case ACCEPTED:
-                workitem.setState(Workitem.ResourcingStateType.ACCEPTED);
+                workitem.setState(WorkitemContext.ResourcingStateType.ACCEPTED);
                 break;
             case STARTED:
-                workitem.setState(Workitem.ResourcingStateType.RUNNING);
+                workitem.setState(WorkitemContext.ResourcingStateType.RUNNING);
                 break;
         }
         workitem.flushSteady();
@@ -87,7 +87,7 @@ public class WorkQueue implements Serializable {
      * @param queue queue to be added
      */
     public void addFromQueue(WorkQueue queue) throws Exception {
-        for (Workitem w : queue.getWorkitems().values()) {
+        for (WorkitemContext w : queue.getWorkitems().values()) {
             this.addOrUpdate(w);
         }
     }
@@ -97,7 +97,7 @@ public class WorkQueue implements Serializable {
      *
      * @param workitem workitem context
      */
-    public Workitem remove(Workitem workitem) {
+    public WorkitemContext remove(WorkitemContext workitem) {
         return this.workitems.remove(workitem.getWid());
     }
 
@@ -107,7 +107,7 @@ public class WorkQueue implements Serializable {
      * @param queue the queue of items to remove
      */
     public void removeFromQueue(WorkQueue queue) {
-        for (Workitem w : queue.getWorkitems().values()) {
+        for (WorkitemContext w : queue.getWorkitems().values()) {
             this.remove(w);
         }
     }
@@ -155,7 +155,7 @@ public class WorkQueue implements Serializable {
      *
      * @return all members of the queue as a HashMap of (workitemId, workitemObject)
      */
-    public Map<String, Workitem> copyToMap() {
+    public Map<String, WorkitemContext> copyToMap() {
         return new HashMap<>(this.workitems);
     }
 
@@ -164,7 +164,7 @@ public class WorkQueue implements Serializable {
      *
      * @return all members of the queue as a HashSet
      */
-    public Set<Workitem> copyToSet() {
+    public Set<WorkitemContext> copyToSet() {
         return new HashSet<>(this.workitems.values());
     }
 
