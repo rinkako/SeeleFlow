@@ -4,6 +4,7 @@
  */
 package org.rinka.seele.server.service.internal;
 
+import org.rinka.seele.server.api.form.PrincipleForm;
 import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
 
 import java.util.Map;
@@ -17,7 +18,7 @@ public interface ProcedureService {
                                                        String namespace,
                                                        String supervisorId,
                                                        String taskName,
-                                                       String principleDescriptor,
+                                                       PrincipleForm principleDescriptor,
                                                        String skill,
                                                        Map<String, Object> args) throws Exception;
 }

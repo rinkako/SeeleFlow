@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.rinka.seele.server.api.form.PrincipleForm;
 import org.rinka.seele.server.util.JsonUtil;
 
 import java.io.Serializable;
@@ -30,14 +31,12 @@ public class Principle implements Serializable {
 
     private Map<String, Object> dispatcherArgs;
 
-    @SuppressWarnings("all")
-    public static Principle of(String descriptor) {
+    public static Principle of(PrincipleForm descriptor) {
         Principle pp = new Principle();
         try {
-            Map raw = JsonUtil.parse(descriptor, Map.class);
-            pp.setDispatcherName((String) raw.get("dispatcherName"));
-            pp.setDispatchType(Enum.valueOf(DispatchType.class, ((String) raw.get("dispatchType")).toUpperCase()));
-            pp.setDispatcherArgs((Map<String, Object>) raw.get("dispatcherArgs"));
+            pp.setDispatcherName(descriptor.getDispatcherName());
+            pp.setDispatchType(Enum.valueOf(DispatchType.class, descriptor.getDispatchType().toUpperCase()));
+            pp.setDispatcherArgs(pp.getDispatcherArgs());
             return pp;
         }
         catch (Exception ex) {

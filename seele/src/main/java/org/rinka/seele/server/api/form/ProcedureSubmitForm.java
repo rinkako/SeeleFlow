@@ -9,6 +9,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import javax.validation.constraints.NotNull;
+import java.util.Map;
 
 /**
  * Class : ProcedureSubmitForm
@@ -35,7 +36,7 @@ public class ProcedureSubmitForm extends NamespaceForm {
     private String skillRequirement;
 
     @NotNull
-    private String principleDescriptor;
+    private PrincipleForm principle;
 
-    private String args;
+    private Map<String, Object> args;
 }

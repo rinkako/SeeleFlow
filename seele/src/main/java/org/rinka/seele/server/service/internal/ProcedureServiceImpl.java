@@ -5,6 +5,7 @@
 package org.rinka.seele.server.service.internal;
 
 import lombok.extern.slf4j.Slf4j;
+import org.rinka.seele.server.api.form.PrincipleForm;
 import org.rinka.seele.server.engine.resourcing.RSInteraction;
 import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
 import org.rinka.seele.server.engine.resourcing.context.TaskContext;
@@ -32,7 +33,7 @@ public class ProcedureServiceImpl implements ProcedureService {
                                                               String namespace,
                                                               String supervisorId,
                                                               String taskName,
-                                                              String principleDescriptor,
+                                                              PrincipleForm principleDescriptor,
                                                               String skill,
                                                               Map<String, Object> args) throws Exception {
         TaskContext task = new TaskContext();

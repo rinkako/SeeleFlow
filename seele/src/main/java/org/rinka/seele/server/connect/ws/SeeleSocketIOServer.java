@@ -37,6 +37,8 @@ public class SeeleSocketIOServer {
     public static final String EVENT_HeartBeatResponseEvent = "__WF_HEARTBEAT_RESPONSE_EVT__";
     public static final String EVENT_RSParticipantLogging = "__WF_PARTICIPANT_LOGGING__";
 
+    public static final String BODY_ServerID = "server-id";
+
     @Autowired
     private ParticipantAuthListener authListener;
 
@@ -61,7 +63,7 @@ public class SeeleSocketIOServer {
     @Autowired
     private ParticipantWorkitemLoggingListener workitemLoggingListener;
 
-    @Value("${server.port}")
+    @Value("${seele.participant.ws.port}")
     private Integer listenPort;
 
     private SocketIOServer server;

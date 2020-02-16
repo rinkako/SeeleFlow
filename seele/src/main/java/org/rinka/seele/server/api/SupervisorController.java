@@ -34,7 +34,7 @@ public class SupervisorController {
 
     @ResponseBody
     @RequestMapping(value = "/register", method = RequestMethod.POST)
-    public SeeleRestResponse supervisorRegister(@Valid SupervisorRegisterForm body) {
+    public SeeleRestResponse supervisorRegister(@Valid @RequestBody SupervisorRegisterForm body) {
         this.supervisorService.registerSupervisor(body.getNamespace(), body.getSupervisorId(),
                 body.getHost(), body.getCallback(), body.getFallback());
         return SeeleRestResponse.ok();
@@ -42,25 +42,24 @@ public class SupervisorController {
 
     @ResponseBody
     @RequestMapping(value = "/unregister", method = RequestMethod.POST)
-    public SeeleRestResponse supervisorUnregister(@Valid SupervisorUnregisterForm body) {
+    public SeeleRestResponse supervisorUnregister(@Valid @RequestBody SupervisorUnregisterForm body) {
         this.supervisorService.unregisterSupervisor(body.getNamespace(), body.getSupervisorId());
         return SeeleRestResponse.ok();
     }
 
     @ResponseBody
     @RequestMapping(value = "/list", method = RequestMethod.POST)
-    public SeeleRestResponse listSupervisors(@Valid NamespaceForm body) {
+    public SeeleRestResponse listSupervisors(@Valid @RequestBody NamespaceForm body) {
         Object r = this.supervisorService.listSupervisorsInNamespace(body.getNamespace());
         return SeeleRestResponse.ok(r);
     }
 
     @ResponseBody
     @RequestMapping(value = "/procedure/submit", method = RequestMethod.POST)
-    public SeeleRestResponse procedureSubmit(@Valid ProcedureSubmitForm body) throws Exception {
-        Map args = JsonUtil.parse(body.getArgs(), Map.class);
+    public SeeleRestResponse procedureSubmit(@Valid @RequestBody ProcedureSubmitForm body) throws Exception {
         Object item = this.procedureService.submitDirectProcedureForResourcing(body.getRequestId(), body.getNamespace(),
-                body.getSupervisorId(), body.getTaskName(), body.getPrincipleDescriptor(),
-                body.getSkillRequirement(), args);
+                body.getSupervisorId(), body.getTaskName(), body.getPrinciple(),
+                body.getSkillRequirement(), body.getArgs());
         return SeeleRestResponse.ok(item);
     }
 }
