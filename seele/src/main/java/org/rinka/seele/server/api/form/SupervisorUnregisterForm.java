@@ -20,8 +20,5 @@ import javax.validation.constraints.NotNull;
 public class SupervisorUnregisterForm extends NamespaceForm {
 
     @NotNull
-    private String namespace;
-
-    @NotNull
     private String supervisorId;
 }

@@ -81,7 +81,7 @@ public class SeeleSocketIOServer {
         this.server.addEventListener(EVENT_HeartBeatEvent, String.class, this.heartbeatListener);
         this.server.addEventListener(EVENT_RSSystemResponse, String.class, this.systemListener);
         this.server.addEventListener(EVENT_RSResponseMeta, MetadataPackage.class, this.metaListener);
-        this.server.addEventListener(EVENT_RSParticipantLogging, ParticipantWorkitemLoggingListener.RSLogEvent.class, this.workitemLoggingListener);
+        this.server.addEventListener(EVENT_RSParticipantLogging, String.class, this.workitemLoggingListener);
         this.server.start();
     }
 }

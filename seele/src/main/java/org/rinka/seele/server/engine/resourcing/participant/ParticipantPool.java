@@ -4,10 +4,8 @@
  */
 package org.rinka.seele.server.engine.resourcing.participant;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.rinka.seele.server.engine.resourcing.participant.agent.MetadataPackage;
-import org.rinka.seele.server.engine.resourcing.queue.WorkQueueContainer;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -20,14 +18,24 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class ParticipantPool {
 
-    private static ConcurrentHashMap<String, NamespacedParticipantPool> namespacedPool = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, NamespacedParticipantPool> namespacingPool = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, ParticipantContext> sessionIdPool = new ConcurrentHashMap<>();
 
     public static NamespacedParticipantPool namespace(String namespace) {
-        return ParticipantPool.namespacedPool
+        return ParticipantPool.namespacingPool
                 .computeIfAbsent(namespace, s -> {
                     log.info("create new pool for namespace: " + namespace);
                     return new NamespacedParticipantPool(namespace);
                 });
+    }
+
+    public static ParticipantContext getParticipantBySessionId(String sessionId) {
+        return ParticipantPool.sessionIdPool.get(sessionId);
+    }
+
+    public static ParticipantContext removeParticipantBySessionId(String sessionId) {
+        ParticipantContext pc = ParticipantPool.sessionIdPool.remove(sessionId);
+        return ParticipantPool.namespacingPool.get(pc.getNamespace()).removeAgentParticipant(pc);
     }
 
     public static class NamespacedParticipantPool {
@@ -41,7 +49,7 @@ public class ParticipantPool {
         private final ConcurrentHashMap<String, ParticipantContext> namespacedPool = new ConcurrentHashMap<>();
         private final ConcurrentHashMap<String, HashSet<ParticipantContext>> skilledPool = new ConcurrentHashMap<>();
 
-        public void addAgentParticipant(String participantId, MetadataPackage descriptor) {
+        public void addAgentParticipant(String sessionId, String participantId, MetadataPackage descriptor) {
             ParticipantContext pc = new ParticipantContext(this.namespace, participantId);
             pc.setDisplayName(descriptor.getDisplayName());
             pc.setCommunicationType(Enum.valueOf(ParticipantCommunicationType.class, descriptor.getCommunicationTypeName()));
@@ -57,10 +65,14 @@ public class ParticipantPool {
                 skillCtx.add(pc);
             }
             this.namespacedPool.put(participantId, pc);
+            ParticipantPool.sessionIdPool.put(sessionId, pc);
         }
 
-        public ParticipantContext removeAgentParticipant(String participantId) {
-            return this.namespacedPool.remove(participantId);
+        private ParticipantContext removeAgentParticipant(ParticipantContext participantContext) {
+            if (participantContext == null) {
+                return null;
+            }
+            return this.namespacedPool.remove(participantContext.getParticipantId());
         }
 
         public Set<ParticipantContext> getSkilledParticipants(String... skills) {

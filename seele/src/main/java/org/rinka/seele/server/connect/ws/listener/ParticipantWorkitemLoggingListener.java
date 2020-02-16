@@ -12,10 +12,11 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.rinka.seele.server.engine.resourcing.participant.ParticipantContext;
+import org.rinka.seele.server.engine.resourcing.participant.ParticipantPool;
 import org.rinka.seele.server.util.JsonUtil;
 import org.springframework.stereotype.Component;
 
-import java.io.Serializable;
 import java.util.Map;
 
 /**
@@ -24,31 +25,21 @@ import java.util.Map;
  */
 @Slf4j
 @Component
-public class ParticipantWorkitemLoggingListener implements DataListener<ParticipantWorkitemLoggingListener.RSLogEvent> {
+public class ParticipantWorkitemLoggingListener implements DataListener<String> {
 
     @Override
-    public void onData(SocketIOClient client, RSLogEvent data, AckRequest ackSender) {
-        log.info(String.format("Workitem[%s][%s] logging: %s", data.namespace, data.workitemId, data.content));
-    }
-
-    @Data
-    @ToString
-    @EqualsAndHashCode
-    public static class RSLogEvent implements Serializable {
-        private String namespace;
-
-        private String workitemId;
-
-        private String content;
-
-        private String timestamp;
-
-        public RSLogEvent(String descriptor) throws JsonProcessingException {
-            Map payload = JsonUtil.parse(descriptor, Map.class);
-            this.namespace = payload.get("namespace").toString();
-            this.workitemId = payload.get("workitemId").toString();
-            this.content = payload.get("content").toString();
-            this.timestamp = payload.get("timestamp").toString();
+    public void onData(SocketIOClient client, String data, AckRequest ackSender) {
+        try {
+            Map parsedLog = JsonUtil.parse(data, Map.class);
+            log.info(String.format("Workitem[%s] logging: %s", parsedLog.get("wid"), parsedLog.get("log")));
+        } catch (JsonProcessingException e) {
+            ParticipantContext pc = ParticipantPool.getParticipantBySessionId(client.getSessionId().toString());
+            if (pc != null) {
+                log.error("cannot parse log item from participant: " + pc.toString());
+            } else {
+                log.error(String.format("unknown participant[%s] with parsing exception: %s",
+                        client.getSessionId().toString(), e.getMessage()));
+            }
         }
     }
 }

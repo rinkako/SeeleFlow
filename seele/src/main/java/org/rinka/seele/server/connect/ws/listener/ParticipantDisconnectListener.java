@@ -10,6 +10,7 @@ import io.netty.handler.codec.http.HttpHeaders;
 import lombok.extern.slf4j.Slf4j;
 import org.rinka.seele.server.connect.ws.ParticipantSocketPool;
 import org.rinka.seele.server.connect.ws.SeeleSocketIOServer;
+import org.rinka.seele.server.engine.resourcing.participant.ParticipantPool;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -29,6 +30,7 @@ public class ParticipantDisconnectListener implements DisconnectListener {
         if (StringUtils.isEmpty(participantId)) {
             log.warn("A participant disconnect from Seele, but participant-id not found");
         } else {
+            ParticipantPool.removeParticipantBySessionId(client.getSessionId().toString());
             ParticipantSocketPool.remove(namespace, participantId);
         }
         log.info("A participant disconnected from Seele-Server: " + client.getSessionId());

@@ -3,7 +3,7 @@ Content-Type: application/json
 
 {
   "requestId": "REQ_1",
-  "namespace": "mars_serv_dev",
+  "namespace": "mars_cluster_dev",
   "supervisorId": "mars_master_1",
   "taskName": "Consistencier_RunJob",
   "skillRequirement": "Consistencier",

@@ -2,7 +2,7 @@ POST http://localhost:11004/api/rs/supervisor/register
 Content-Type: application/json
 
 {
-  "namespace": "mars_serv_dev",
+  "namespace": "mars_cluster_dev",
   "supervisorId": "mars_master_1",
   "host": "http://localhost:4080",
   "callback": "/clusterman/callback"
@@ -10,6 +10,15 @@ Content-Type: application/json
 
 ###
 
+POST http://localhost:11004/api/rs/supervisor/unregister
+Content-Type: application/json
+
+{
+  "namespace": "mars_cluster_dev",
+  "supervisorId": "mars_master_1"
+}
+
+###
 POST http://localhost:11004/api/rs/supervisor/list
 Content-Type: application/json
 
