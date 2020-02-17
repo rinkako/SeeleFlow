@@ -27,6 +27,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.constraints.NotNull;
+import java.sql.Timestamp;
+import java.time.ZonedDateTime;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -47,10 +50,15 @@ public class RSInteraction {
     @Autowired
     private SeeleWorkitemRepository workitemRepository;
 
-    @Transactional
+    /**
+     * Handle workitem submit directly to RS.
+     *
+     * This method MUST NOT TRANSACTIONAL, since it must ensure that the workitem insert
+     * transaction has committed before notifying supervisor.
+     */
     public WorkitemContext supervisorSubmitTask(TaskContext context) throws Exception {
         // generate workitem
-        WorkitemContext workitem = WorkitemContext.createFrom(context, workitemRepository);
+        WorkitemContext workitem = this.createWorkitemTransactional(context);
         Principle principle = context.getPrinciple();
         String skillRequired = workitem.getSkill();
         // calculate candidate set
@@ -82,18 +90,94 @@ public class RSInteraction {
             }
         }
         // notify supervisor
-        log.info(String.format("Prepare to notify supervisor `%s`(NS:%s) about resourcing",
-                context.getSupervisorId(), context.getNamespace()));
-        Optional<CallableSupervisor> supervisor = SupervisorRestPool
-                .namespace(context.getNamespace())
-                .get(context.getSupervisorId());
-        if (supervisor.isPresent()) {
-            CallableSupervisor callableSupervisor = supervisor.get();
-            this.transitionReply(context.getRequestId(), callableSupervisor, workitem, "NONE", null);
-        }
-        log.info(String.format("Notified supervisor `%s`(NS:%s) about resourcing",
-                context.getSupervisorId(), context.getNamespace()));
+        this.notifySupervisorsWorkitemTransition(context.getRequestId(),
+                context.getNamespace(), workitem, "NONE", null);
         return workitem;
+    }
+
+    /**
+     * Create a workitem and flush steady MUST BE independently transactional execution.
+     * Otherwise, transition requests may happen before this transaction commit and causes inconsistency.
+     * @param context
+     * @return
+     * @throws Exception
+     */
+    @Transactional
+    protected WorkitemContext createWorkitemTransactional(TaskContext context) throws Exception {
+        return WorkitemContext.createFrom(context, workitemRepository);
+    }
+
+    @Transactional
+    public WorkitemContext acceptWorkitemByParticipant(WorkitemContext workitem, ParticipantContext participant) throws Exception {
+        Principle.DispatchType dispatchType = workitem.getPrinciple().getDispatchType();
+        switch (dispatchType) {
+            case ALLOCATE:
+                WorkQueueContainer qContainer = participant.getQueueContainer();
+                qContainer.moveAllocatedToAccepted(workitem);
+                workitem.setEnableTime(Timestamp.from(ZonedDateTime.now().toInstant()));
+                break;
+            case OFFER:
+            default:
+                log.error("unsupported dispatch type: " + dispatchType);
+                break;
+        }
+        // notify supervisor
+        this.notifySupervisorsWorkitemTransition(workitem.getRequestId(), workitem.getNamespace(), workitem, WorkitemContext.ResourcingStateType.ALLOCATED.name(), null);
+        return workitem;
+    }
+
+    @Transactional
+    public WorkitemContext startWorkitemByParticipant(WorkitemContext workitem, ParticipantContext participant) throws Exception {
+        Principle.DispatchType dispatchType = workitem.getPrinciple().getDispatchType();
+        switch (dispatchType) {
+            case ALLOCATE:
+                WorkQueueContainer qContainer = participant.getQueueContainer();
+                qContainer.moveAcceptedToStarted(workitem);
+                workitem.setStartTime(Timestamp.from(ZonedDateTime.now().toInstant()));
+                break;
+            case OFFER:
+            default:
+                log.error("unsupported dispatch type: " + dispatchType);
+                break;
+        }
+        // notify supervisor
+        this.notifySupervisorsWorkitemTransition(workitem.getRequestId(), workitem.getNamespace(), workitem, WorkitemContext.ResourcingStateType.ALLOCATED.name(), null);
+        return workitem;
+    }
+
+    @Transactional
+    public WorkitemContext completeWorkitemByParticipant(WorkitemContext workitem, ParticipantContext participant) throws Exception {
+        Principle.DispatchType dispatchType = workitem.getPrinciple().getDispatchType();
+        switch (dispatchType) {
+            case ALLOCATE:
+                WorkQueueContainer qContainer = participant.getQueueContainer();
+                qContainer.removeFromQueue(workitem, WorkQueueType.STARTED);
+                workitem.setState(WorkitemContext.ResourcingStateType.COMPLETED);
+                workitem.setCompleteTime(Timestamp.from(ZonedDateTime.now().toInstant()));
+                workitem.flushSteady();
+                break;
+            case OFFER:
+            default:
+                log.error("unsupported dispatch type: " + dispatchType);
+                break;
+        }
+        log.info("workitem completed, remove cache");
+        workitem.removeSelfFromCache();
+        // notify supervisor
+        this.notifySupervisorsWorkitemTransition(workitem.getRequestId(), workitem.getNamespace(), workitem, WorkitemContext.ResourcingStateType.ALLOCATED.name(), null);
+        return workitem;
+    }
+
+    private void notifySupervisorsWorkitemTransition(String requestId, String namespace, WorkitemContext workitem, String prevStateName, Object payload) {
+        Map<String, CallableSupervisor> unmodifiedSupervisors = SupervisorRestPool.namespace(namespace).getAll();
+        int size = unmodifiedSupervisors.size();
+        log.info(String.format("Prepare to notify all supervisors(total: %s) about transitioning workitem %s, which type is: %s",
+                size, workitem.getWid(), workitem.getTaskName()));
+        for (CallableSupervisor cs : unmodifiedSupervisors.values()) {
+            this.transitionReply(requestId, cs, workitem, prevStateName, payload);
+        }
+        log.info(String.format("Notified all %s supervisors in %s about resourcing workitem: %s",
+                size, namespace, workitem.getWid()));
     }
 
     private void transitionReply(String requestId,

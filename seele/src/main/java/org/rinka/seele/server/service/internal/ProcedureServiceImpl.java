@@ -27,7 +27,22 @@ public class ProcedureServiceImpl implements ProcedureService {
     @Autowired
     private RSInteraction interaction;
 
-    @Transactional
+    /**
+     * Convert workitem submit directly request to resourcing interaction.
+     *
+     * This method MUST NOT TRANSACTIONAL, since it must ensure that the workitem insert
+     * transaction has committed before notifying supervisor.
+     *
+     * @param requestId
+     * @param namespace
+     * @param supervisorId
+     * @param taskName
+     * @param principleDescriptor
+     * @param skill
+     * @param args
+     * @return
+     * @throws Exception
+     */
     @Override
     public WorkitemContext submitDirectProcedureForResourcing(String requestId,
                                                               String namespace,

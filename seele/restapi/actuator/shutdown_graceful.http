@@ -1,0 +1,6 @@
+POST http://localhost:11004/actuator/shutdown
+Content-Type: application/json
+
+{}
+
+###

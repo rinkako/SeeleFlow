@@ -96,12 +96,21 @@ public class WorkQueueContainer {
     }
 
     /**
-     * Move workitem queue: ALLOCATED -> STARTED
+     * Move workitem queue: ALLOCATED -> ACCEPTED
      *
      * @param workitem workitem context
      */
-    public void moveAllocatedToStarted(WorkitemContext workitem) throws Exception {
-        this.move(workitem, WorkQueueType.ALLOCATED, WorkQueueType.STARTED);
+    public void moveAllocatedToAccepted(WorkitemContext workitem) throws Exception {
+        this.move(workitem, WorkQueueType.ALLOCATED, WorkQueueType.ACCEPTED);
+    }
+
+    /**
+     * Move workitem queue: ACCEPTED -> STARTED
+     *
+     * @param workitem workitem context
+     */
+    public void moveAcceptedToStarted(WorkitemContext workitem) throws Exception {
+        this.move(workitem, WorkQueueType.ACCEPTED, WorkQueueType.STARTED);
     }
 
     /**
