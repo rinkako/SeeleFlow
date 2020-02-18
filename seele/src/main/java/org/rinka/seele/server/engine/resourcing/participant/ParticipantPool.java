@@ -75,6 +75,10 @@ public class ParticipantPool {
             return this.namespacedPool.remove(participantContext.getParticipantId());
         }
 
+        public Set<ParticipantContext> getParticipants() {
+            return new HashSet<>(this.namespacedPool.values());
+        }
+
         public Set<ParticipantContext> getSkilledParticipants(String... skills) {
             Set<ParticipantContext> result = new HashSet<>();
             for (String skill : skills) {

@@ -36,7 +36,7 @@ public class CacheGarbageCollector {
 
     }
 
-    @Scheduled(initialDelay = 60_000, fixedDelay = 60_000)
+    @Scheduled(initialDelay = 60_000, fixedDelay = 30_000)
     private void workitemCacheCollect() {
         log.info("begin workitem cache GC");
         try {

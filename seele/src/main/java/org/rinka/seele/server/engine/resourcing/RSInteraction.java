@@ -67,9 +67,17 @@ public class RSInteraction {
         Principle principle = context.getPrinciple();
         String skillRequired = workitem.getSkill();
         // calculate candidate set
-        Set<ParticipantContext> candidates = ParticipantPool
-                .namespace(context.getNamespace())
-                .getSkilledParticipants(skillRequired);
+        Set<ParticipantContext> candidates;
+        if (skillRequired == null) {
+            log.info("no any skill requirement, candidate set will be all participants");
+            candidates = ParticipantPool
+                    .namespace(context.getNamespace())
+                    .getParticipants();
+        } else {
+            candidates = ParticipantPool
+                    .namespace(context.getNamespace())
+                    .getSkilledParticipants(skillRequired);
+        }
         // bad allocation
         if (candidates.size() == 0) {
             log.error("Bad allocation occurred, WI is: " + workitem.toString());

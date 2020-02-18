@@ -32,7 +32,6 @@ public class ProcedureSubmitForm extends NamespaceForm {
     @NotNull
     private String taskName;
 
-    @NotNull
     private String skillRequirement;
 
     @NotNull
