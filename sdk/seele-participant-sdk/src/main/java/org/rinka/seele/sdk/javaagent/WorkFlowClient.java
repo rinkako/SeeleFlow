@@ -2,7 +2,7 @@
  * Project Seele Workflow
  * Author : Rinka
  */
-package org.rinka.seele.sdk.javaagent.sdk;
+package org.rinka.seele.sdk.javaagent;
 
 import ch.qos.logback.classic.Logger;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,8 +14,8 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
-import org.rinka.seele.sdk.javaagent.sdk.logger.WorkflowLoggerFactory;
-import org.rinka.seele.sdk.javaagent.sdk.util.JsonUtil;
+import org.rinka.seele.sdk.javaagent.logger.WorkflowLoggerFactory;
+import org.rinka.seele.sdk.javaagent.util.JsonUtil;
 
 import java.io.Serializable;
 import java.time.ZonedDateTime;

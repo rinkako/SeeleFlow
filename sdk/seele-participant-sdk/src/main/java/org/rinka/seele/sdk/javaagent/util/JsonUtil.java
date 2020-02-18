@@ -2,7 +2,7 @@
  * Project Seele Workflow
  * Author : Rinka
  */
-package org.rinka.seele.sdk.javaagent.sdk.util;
+package org.rinka.seele.sdk.javaagent.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;

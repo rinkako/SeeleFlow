@@ -2,7 +2,7 @@
  * Project Seele Workflow
  * Author : Rinka
  */
-package org.rinka.seele.sdk.javaagent.sdk;
+package org.rinka.seele.sdk.javaagent;
 
 import ch.qos.logback.classic.Logger;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -10,7 +10,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.rinka.seele.sdk.javaagent.sdk.logger.WorkflowLoggerFactory;
+import org.rinka.seele.sdk.javaagent.logger.WorkflowLoggerFactory;
 
 import java.io.Serializable;
 import java.util.Map;

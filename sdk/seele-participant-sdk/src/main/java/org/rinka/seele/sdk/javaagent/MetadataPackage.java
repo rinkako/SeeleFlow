@@ -2,7 +2,7 @@
  * Author : Rinka
  * Date   : 2020/1/19
  */
-package org.rinka.seele.sdk.javaagent.sdk;
+package org.rinka.seele.sdk.javaagent;
 
 
 import lombok.Getter;

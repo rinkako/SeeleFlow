@@ -2,14 +2,14 @@
  * Project Seele Workflow
  * Author : Rinka
  */
-package org.rinka.seele.sdk.javaagent.sdk.logger;
+package org.rinka.seele.sdk.javaagent.logger;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
-import org.rinka.seele.sdk.javaagent.sdk.WorkFlowClient;
-import org.rinka.seele.sdk.javaagent.sdk.util.JsonUtil;
+import org.rinka.seele.sdk.javaagent.WorkFlowClient;
+import org.rinka.seele.sdk.javaagent.util.JsonUtil;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 

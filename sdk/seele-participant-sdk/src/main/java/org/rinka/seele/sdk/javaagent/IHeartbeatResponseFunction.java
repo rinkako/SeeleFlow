@@ -2,7 +2,7 @@
  * Project Seele Workflow
  * Author : Rinka
  */
-package org.rinka.seele.sdk.javaagent.sdk;
+package org.rinka.seele.sdk.javaagent;
 
 /**
  * Class : IHeartbeatResponseFunction
