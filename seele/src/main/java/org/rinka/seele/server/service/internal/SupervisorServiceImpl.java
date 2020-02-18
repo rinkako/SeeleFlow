@@ -11,6 +11,7 @@ import org.rinka.seele.server.steady.seele.entity.SeeleSupervisorEntity;
 import org.rinka.seele.server.steady.seele.repository.SeeleSupervisorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
@@ -29,17 +30,23 @@ public class SupervisorServiceImpl implements SupervisorService {
     @Autowired
     private SeeleSupervisorRepository supervisorRepository;
 
-    @Transactional
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     @Override
-    public void registerSupervisor(String namespace, String supervisorId, String host, String callback, String fallback) {
-        SeeleSupervisorEntity supervisorEntity = new SeeleSupervisorEntity();
-        supervisorEntity.setNamespace(namespace);
-        supervisorEntity.setCallbackUri(callback);
-        supervisorEntity.setHost(host);
-        supervisorEntity.setFallbackHost(fallback);
-        supervisorEntity.setSupervisorId(supervisorId);
-        this.supervisorRepository.save(supervisorEntity);
-        SupervisorRestPool.namespace(namespace).add(supervisorId, host, callback, fallback);
+    public boolean registerSupervisor(String namespace, String supervisorId, String host, String callback, String fallback) {
+        SeeleSupervisorEntity fb = this.supervisorRepository.findByNamespaceAndSupervisorId(namespace, supervisorId);
+        if (fb == null) {
+            SeeleSupervisorEntity supervisorEntity = new SeeleSupervisorEntity();
+            supervisorEntity.setNamespace(namespace);
+            supervisorEntity.setCallbackUri(callback);
+            supervisorEntity.setHost(host);
+            supervisorEntity.setFallbackHost(fallback);
+            supervisorEntity.setSupervisorId(supervisorId);
+            this.supervisorRepository.save(supervisorEntity);
+            SupervisorRestPool.namespace(namespace).add(supervisorId, host, callback, fallback);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     @Transactional

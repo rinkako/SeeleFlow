@@ -131,3 +131,4 @@ venv.bak/
 
 .idea/
 /seele/.mvn/
+/sdk/seele-participant-sdk/seele-participant-sdk.iml

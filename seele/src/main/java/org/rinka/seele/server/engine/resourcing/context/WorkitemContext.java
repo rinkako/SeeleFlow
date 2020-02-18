@@ -88,6 +88,8 @@ public class WorkitemContext implements Serializable {
     @Setter
     private Timestamp completeTime;
 
+
+
     @JsonIgnore
     private transient SeeleWorkitemRepository repository;
 

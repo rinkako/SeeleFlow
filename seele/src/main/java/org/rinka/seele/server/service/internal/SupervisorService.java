@@ -14,7 +14,7 @@ import java.util.List;
  */
 public interface SupervisorService {
 
-    void registerSupervisor(String namespace, String supervisorId, String host, String callback, String fallback);
+    boolean registerSupervisor(String namespace, String supervisorId, String host, String callback, String fallback);
 
     boolean unregisterSupervisor(String namespace, String supervisorId);
 

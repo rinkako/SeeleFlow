@@ -30,7 +30,6 @@ import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
 import java.time.ZonedDateTime;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 /**

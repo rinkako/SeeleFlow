@@ -12,5 +12,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * Usage :
  */
 public interface SeeleSupervisorRepository extends JpaRepository<SeeleSupervisorEntity, Long> {
+
+    SeeleSupervisorEntity findByNamespaceAndSupervisorId(String namespace, String supervisorId);
+
     void deleteAllByNamespaceAndSupervisorId(String namespace, String supervisorId);
 }
