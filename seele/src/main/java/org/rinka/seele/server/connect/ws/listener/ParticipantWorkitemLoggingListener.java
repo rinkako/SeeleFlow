@@ -27,6 +27,8 @@ import java.util.Map;
 @Component
 public class ParticipantWorkitemLoggingListener implements DataListener<String> {
 
+    public static final String MESSAGE_EOF = "___SEELE_LOG_EOF___";
+
     @Override
     public void onData(SocketIOClient client, String data, AckRequest ackSender) {
         try {
@@ -39,9 +41,24 @@ public class ParticipantWorkitemLoggingListener implements DataListener<String> 
             WorkitemContext workitem = WorkitemContext.loadByWid(wid);
             if (bulk) {
                 List<String> lines = JsonUtil.parseRaw(content, new TypeReference<List<String>>() {});
-                lines.forEach(workitem::appendLogLine);
+                boolean eofFlag = false;
+                for (String line : lines) {
+                    if (line.equals(MESSAGE_EOF)) {
+                        eofFlag = true;
+                    } else {
+                        workitem.appendLogLine(line);
+                    }
+                }
+                // ensure mark all arrival after insert buffer queue
+                if (eofFlag) {
+                    workitem.markLogAlreadyArrived();
+                }
             } else {
-                workitem.appendLogLine(content);
+                if (content.equals(MESSAGE_EOF)) {
+                    workitem.markLogAlreadyArrived();
+                } else {
+                    workitem.appendLogLine(content);
+                }
             }
         } catch (JsonProcessingException e) {
             ParticipantContext pc = ParticipantPool.getParticipantBySessionId(client.getSessionId().toString());

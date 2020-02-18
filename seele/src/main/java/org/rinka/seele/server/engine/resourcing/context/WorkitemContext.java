@@ -16,7 +16,6 @@ import org.rinka.seele.server.engine.resourcing.principle.Principle;
 import org.rinka.seele.server.logging.RDBWorkitemLogger;
 import org.rinka.seele.server.logging.WorkitemLogger;
 import org.rinka.seele.server.steady.seele.entity.SeeleWorkitemEntity;
-import org.rinka.seele.server.steady.seele.repository.SeeleItemlogRepository;
 import org.rinka.seele.server.steady.seele.repository.SeeleWorkitemRepository;
 import org.rinka.seele.server.util.JsonUtil;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +26,6 @@ import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Class : Workitem
@@ -40,7 +38,7 @@ public class WorkitemContext implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private static final ConcurrentHashMap<String, ConcurrentHashMap<String, WorkitemContext>> cachePool = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, WorkitemContext> workitemPool = new ConcurrentHashMap<>();
+    public static final ConcurrentHashMap<String, WorkitemContext> WorkitemPool = new ConcurrentHashMap<>();
 
     @Getter
     @Setter
@@ -102,6 +100,10 @@ public class WorkitemContext implements Serializable {
 
     @JsonIgnore
     @Getter
+    private transient boolean logArrived = false;
+
+    @JsonIgnore
+    @Getter
     private transient boolean logFlushed = false;
 
     /**
@@ -113,8 +115,24 @@ public class WorkitemContext implements Serializable {
         this.logContainer.append(log);
     }
 
+    public void markLogAlreadyArrived() {
+        this.logArrived = true;
+    }
+
     public void markLogAlreadyFlushed() {
         this.logFlushed = true;
+    }
+
+    public void markLogNotFlush() {
+        this.logFlushed = false;
+    }
+
+    public boolean isFinalState() {
+        return this.state == ResourcingStateType.COMPLETED ||
+                this.state == ResourcingStateType.EXCEPTION ||
+                this.state == ResourcingStateType.CANCELLED ||
+                this.state == ResourcingStateType.FORCE_COMPLETED ||
+                this.state == ResourcingStateType.BAD_ALLOCATED;
     }
 
     public static WorkitemContext createFrom(TaskContext task,
@@ -220,7 +238,7 @@ public class WorkitemContext implements Serializable {
         ConcurrentHashMap<String, WorkitemContext> namespacedPool = WorkitemContext
                 .cachePool.computeIfAbsent(this.namespace, ns -> new ConcurrentHashMap<>());
         namespacedPool.put(this.wid, this);
-        WorkitemContext.workitemPool.put(this.wid, this);
+        WorkitemContext.WorkitemPool.put(this.wid, this);
     }
 
     public void removeSelfFromCache() {
@@ -234,11 +252,11 @@ public class WorkitemContext implements Serializable {
     }
 
     private static WorkitemContext getFromCache(String wid) {
-        return WorkitemContext.workitemPool.get(wid);
+        return WorkitemContext.WorkitemPool.get(wid);
     }
 
     private static WorkitemContext removeCache(String wid) {
-        WorkitemContext rm = WorkitemContext.workitemPool.remove(wid);
+        WorkitemContext rm = WorkitemContext.WorkitemPool.remove(wid);
         if (rm != null) {
             ConcurrentHashMap<String, WorkitemContext> ns = WorkitemContext.cachePool.get(rm.namespace);
             if (ns != null) {

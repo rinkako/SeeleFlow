@@ -157,25 +157,23 @@ public class RSInteraction {
                 workitem.setState(WorkitemContext.ResourcingStateType.COMPLETED);
                 workitem.setCompleteTime(Timestamp.from(ZonedDateTime.now().toInstant()));
                 workitem.flushSteady();
-                if (workitem.getLogContainer() instanceof RDBWorkitemLogger) {
-                    RDBWorkitemLogger rdbLogContainer = (RDBWorkitemLogger) workitem.getLogContainer();
-                    log.info("using embedded logging, begin flush log with items: " + rdbLogContainer.size());
-                    String logContent = rdbLogContainer.dumpMultilineString();
-                    SeeleItemlogEntity logItem = new SeeleItemlogEntity();
-                    logItem.setWid(workitem.getWid());
-                    logItem.setFinished(true);
-                    logItem.setContent(logContent);
-                    this.itemlogRepository.save(logItem);
-                    rdbLogContainer.clear();
-                    log.info("workitem log flushed");
-                }
                 break;
             case OFFER:
             default:
                 log.error("unsupported dispatch type: " + dispatchType);
                 break;
         }
-        log.info("workitem completed, wait for cache GC");
+        if (workitem.isLogArrived()) {
+            workitem.markLogAlreadyFlushed();
+            try {
+                this.flushLogItem(workitem);
+            } catch (Exception e) {
+                log.error("flush log for workitem fault, reset flush flag: " + e.getMessage());
+                workitem.markLogNotFlush();
+            }
+        } else {
+            log.info("workitem completed, wait for cache GC to flush log");
+        }
         // notify supervisor
         this.notifySupervisorsWorkitemTransition(workitem.getRequestId(), workitem.getNamespace(), workitem, WorkitemContext.ResourcingStateType.ALLOCATED.name(), null);
         return workitem;
@@ -205,6 +203,22 @@ public class RSInteraction {
         transitionReply.setRequestId(requestId);
         transitionReply.setPayload(payload);
         this.supervisorTelepathy.callback(supervisor, transitionReply);
+    }
+
+    @Transactional
+    public void flushLogItem(WorkitemContext workitem) {
+        if (workitem.getLogContainer() instanceof RDBWorkitemLogger) {
+            RDBWorkitemLogger rdbLogContainer = (RDBWorkitemLogger) workitem.getLogContainer();
+            log.info("using embedded logging, begin flush log with items: " + rdbLogContainer.size());
+            String logContent = rdbLogContainer.dumpMultilineString();
+            SeeleItemlogEntity logItem = new SeeleItemlogEntity();
+            logItem.setWid(workitem.getWid());
+            logItem.setFinished(true);
+            logItem.setContent(logContent);
+            this.itemlogRepository.save(logItem);
+            rdbLogContainer.clear();
+            log.info("workitem log flushed");
+        }
     }
 
     @Data
