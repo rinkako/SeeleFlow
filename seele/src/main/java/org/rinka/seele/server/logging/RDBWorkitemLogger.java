@@ -5,6 +5,8 @@
  */
 package org.rinka.seele.server.logging;
 
+import org.rinka.seele.server.steady.seele.repository.SeeleItemlogRepository;
+
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -14,6 +16,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class RDBWorkitemLogger implements WorkitemLogger<RDBWorkitemLogger> {
 
     private ConcurrentLinkedQueue<String> buffer = new ConcurrentLinkedQueue<>();
+    private boolean isFlushed = false;
 
     public RDBWorkitemLogger append(String logLine) {
         this.buffer.add(logLine);
@@ -25,7 +28,7 @@ public class RDBWorkitemLogger implements WorkitemLogger<RDBWorkitemLogger> {
     }
 
     public String dumpMultilineString() {
-        return this.dumpString("\n");
+        return this.dumpString("");
     }
 
     public String dumpString(String delimiter) {

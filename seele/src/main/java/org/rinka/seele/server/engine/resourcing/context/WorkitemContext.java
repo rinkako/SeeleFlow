@@ -13,7 +13,10 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.rinka.seele.server.engine.resourcing.principle.Principle;
+import org.rinka.seele.server.logging.RDBWorkitemLogger;
+import org.rinka.seele.server.logging.WorkitemLogger;
 import org.rinka.seele.server.steady.seele.entity.SeeleWorkitemEntity;
+import org.rinka.seele.server.steady.seele.repository.SeeleItemlogRepository;
 import org.rinka.seele.server.steady.seele.repository.SeeleWorkitemRepository;
 import org.rinka.seele.server.util.JsonUtil;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +27,7 @@ import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Class : Workitem
@@ -88,17 +92,33 @@ public class WorkitemContext implements Serializable {
     @Setter
     private Timestamp completeTime;
 
-
+    @SuppressWarnings({"rawtypes"})
+    @Getter
+    @JsonIgnore
+    private WorkitemLogger logContainer;
 
     @JsonIgnore
     private transient SeeleWorkitemRepository repository;
+
+    @JsonIgnore
+    @Getter
+    private transient boolean logFlushed = false;
 
     /**
      * Has final result already posted to supervisor and get ACK
      */
     private Boolean supervisorAcknowledged = false;
 
-    public static WorkitemContext createFrom(TaskContext task, SeeleWorkitemRepository repository) throws Exception {
+    public void appendLogLine(String log) {
+        this.logContainer.append(log);
+    }
+
+    public void markLogAlreadyFlushed() {
+        this.logFlushed = true;
+    }
+
+    public static WorkitemContext createFrom(TaskContext task,
+                                             SeeleWorkitemRepository repository) throws Exception {
         WorkitemContext workitem = new WorkitemContext();
         workitem.namespace = task.getNamespace();
         workitem.args = task.getArgs();
@@ -110,6 +130,7 @@ public class WorkitemContext implements Serializable {
         workitem.createTime = Timestamp.from(ZonedDateTime.now().toInstant());
         workitem.taskName = task.getTaskName();
         workitem.principle = task.getPrinciple();
+        workitem.logContainer = new RDBWorkitemLogger();
         workitem.flushSteady();
         workitem.addSelfToCache();
         return workitem;
@@ -120,6 +141,7 @@ public class WorkitemContext implements Serializable {
         if (workitem == null) {
             workitem = new WorkitemContext();
             workitem.wid = wid;
+            // todo repository ref
             workitem.refreshSteady();
             workitem.addSelfToCache();
         }

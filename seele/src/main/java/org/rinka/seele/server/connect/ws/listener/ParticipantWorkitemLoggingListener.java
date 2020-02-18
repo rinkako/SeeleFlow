@@ -8,12 +8,15 @@ import com.corundumstudio.socketio.AckRequest;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.listener.DataListener;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.extern.slf4j.Slf4j;
+import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
 import org.rinka.seele.server.engine.resourcing.participant.ParticipantContext;
 import org.rinka.seele.server.engine.resourcing.participant.ParticipantPool;
 import org.rinka.seele.server.util.JsonUtil;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,7 +31,18 @@ public class ParticipantWorkitemLoggingListener implements DataListener<String> 
     public void onData(SocketIOClient client, String data, AckRequest ackSender) {
         try {
             Map parsedLog = JsonUtil.parse(data, Map.class);
-            log.info(String.format("Workitem[%s] logging: %s", parsedLog.get("wid"), parsedLog.get("log")));
+            String wid = (String) parsedLog.get("wid");
+            Boolean bulk = parsedLog.get("bulk").equals("true");
+            String content = (String) parsedLog.get("log");
+            // TODO DEBUG
+            log.info(String.format("Workitem[%s] logging: %s", wid, content));
+            WorkitemContext workitem = WorkitemContext.loadByWid(wid);
+            if (bulk) {
+                List<String> lines = JsonUtil.parseRaw(content, new TypeReference<List<String>>() {});
+                lines.forEach(workitem::appendLogLine);
+            } else {
+                workitem.appendLogLine(content);
+            }
         } catch (JsonProcessingException e) {
             ParticipantContext pc = ParticipantPool.getParticipantBySessionId(client.getSessionId().toString());
             if (pc != null) {

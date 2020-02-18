@@ -4,6 +4,8 @@
  */
 package org.rinka.seele.server.steady.seele.entity;
 
+import lombok.ToString;
+
 import javax.persistence.*;
 import java.sql.Timestamp;
 import java.util.Objects;
@@ -12,6 +14,7 @@ import java.util.Objects;
  * Class : SeeleSupervisorEntity
  * Usage :
  */
+@ToString
 @Entity
 @Table(name = "seele_supervisor", schema = "seele_workflow")
 public class SeeleSupervisorEntity {

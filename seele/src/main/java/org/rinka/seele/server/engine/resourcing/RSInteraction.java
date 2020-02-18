@@ -21,6 +21,9 @@ import org.rinka.seele.server.engine.resourcing.participant.ParticipantPool;
 import org.rinka.seele.server.engine.resourcing.principle.Principle;
 import org.rinka.seele.server.engine.resourcing.queue.WorkQueueContainer;
 import org.rinka.seele.server.engine.resourcing.queue.WorkQueueType;
+import org.rinka.seele.server.logging.RDBWorkitemLogger;
+import org.rinka.seele.server.steady.seele.entity.SeeleItemlogEntity;
+import org.rinka.seele.server.steady.seele.repository.SeeleItemlogRepository;
 import org.rinka.seele.server.steady.seele.repository.SeeleWorkitemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -48,6 +51,9 @@ public class RSInteraction {
 
     @Autowired
     private SeeleWorkitemRepository workitemRepository;
+
+    @Autowired
+    private SeeleItemlogRepository itemlogRepository;
 
     /**
      * Handle workitem submit directly to RS.
@@ -97,13 +103,10 @@ public class RSInteraction {
     /**
      * Create a workitem and flush steady MUST BE independently transactional execution.
      * Otherwise, transition requests may happen before this transaction commit and causes inconsistency.
-     * @param context
-     * @return
-     * @throws Exception
      */
     @Transactional
     protected WorkitemContext createWorkitemTransactional(TaskContext context) throws Exception {
-        return WorkitemContext.createFrom(context, workitemRepository);
+        return WorkitemContext.createFrom(context, this.workitemRepository);
     }
 
     @Transactional
@@ -154,14 +157,25 @@ public class RSInteraction {
                 workitem.setState(WorkitemContext.ResourcingStateType.COMPLETED);
                 workitem.setCompleteTime(Timestamp.from(ZonedDateTime.now().toInstant()));
                 workitem.flushSteady();
+                if (workitem.getLogContainer() instanceof RDBWorkitemLogger) {
+                    RDBWorkitemLogger rdbLogContainer = (RDBWorkitemLogger) workitem.getLogContainer();
+                    log.info("using embedded logging, begin flush log with items: " + rdbLogContainer.size());
+                    String logContent = rdbLogContainer.dumpMultilineString();
+                    SeeleItemlogEntity logItem = new SeeleItemlogEntity();
+                    logItem.setWid(workitem.getWid());
+                    logItem.setFinished(true);
+                    logItem.setContent(logContent);
+                    this.itemlogRepository.save(logItem);
+                    rdbLogContainer.clear();
+                    log.info("workitem log flushed");
+                }
                 break;
             case OFFER:
             default:
                 log.error("unsupported dispatch type: " + dispatchType);
                 break;
         }
-        log.info("workitem completed, remove cache");
-        workitem.removeSelfFromCache();
+        log.info("workitem completed, wait for cache GC");
         // notify supervisor
         this.notifySupervisorsWorkitemTransition(workitem.getRequestId(), workitem.getNamespace(), workitem, WorkitemContext.ResourcingStateType.ALLOCATED.name(), null);
         return workitem;
