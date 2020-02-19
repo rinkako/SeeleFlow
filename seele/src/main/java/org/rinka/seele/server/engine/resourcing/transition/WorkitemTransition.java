@@ -5,6 +5,7 @@
  */
 package org.rinka.seele.server.engine.resourcing.transition;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import org.rinka.seele.server.engine.resourcing.context.ResourcingStateType;
 import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
@@ -16,7 +17,7 @@ import java.util.*;
  * Class : WorkitemTransition
  * Usage :
  */
-@ToString
+@ToString(exclude = {"callback"})
 @EqualsAndHashCode
 public class WorkitemTransition implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -43,6 +44,7 @@ public class WorkitemTransition implements Serializable {
 
     @Getter
     @Setter
+    @JsonIgnore
     private BaseTransitionCallback callback;
 
     public WorkitemTransition(TransitionCallerType callerType,

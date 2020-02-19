@@ -7,8 +7,11 @@ package org.rinka.seele.server.engine.resourcing.transition;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.Serializable;
+
 @Slf4j
-public abstract class BaseTransitionCallback {
+public abstract class BaseTransitionCallback implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     public abstract void onExecuted(WorkitemTransitionTracker tracker, WorkitemTransition transition);
 
@@ -17,7 +20,7 @@ public abstract class BaseTransitionCallback {
     }
 
     public void onIgnored(WorkitemTransitionTracker tracker, WorkitemTransition transition) {
-        log.error(String.format("workitem transition duplication ignored: %s", transition.toString()));
+        log.warn(String.format("workitem transition duplication ignored: %s", transition.toString()));
     }
 
 }
