@@ -1,6 +1,7 @@
 /*
+ * Project Seele Workflow
  * Author : Rinka
- * Date   : 2020/2/12
+ * Date   : 2020/2/19
  */
 package org.rinka.seele.server.api.form;
 
@@ -11,14 +12,14 @@ import lombok.ToString;
 import javax.validation.constraints.NotNull;
 
 /**
- * Class : NamespaceForm
+ * Class : WidForm
  * Usage :
  */
 @Data
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class NamespaceForm extends SeeleRestForm {
+public class WidForm extends NamespaceForm {
 
     @NotNull
-    private String namespace;
+    private String wid;
 }

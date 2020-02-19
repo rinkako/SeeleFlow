@@ -4,10 +4,7 @@
  */
 package org.rinka.seele.server.api;
 
-import org.rinka.seele.server.api.form.NamespaceForm;
-import org.rinka.seele.server.api.form.ProcedureSubmitForm;
-import org.rinka.seele.server.api.form.SupervisorRegisterForm;
-import org.rinka.seele.server.api.form.SupervisorUnregisterForm;
+import org.rinka.seele.server.api.form.*;
 import org.rinka.seele.server.api.response.SeeleRestResponse;
 import org.rinka.seele.server.service.internal.ProcedureService;
 import org.rinka.seele.server.service.internal.SupervisorService;
@@ -58,5 +55,12 @@ public class SupervisorController {
                 body.getSupervisorId(), body.getTaskName(), body.getPrinciple(),
                 body.getSkillRequirement(), body.getArgs());
         return SeeleRestResponse.ok(item);
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "/workitem/forceComplete", method = RequestMethod.POST)
+    public SeeleRestResponse forceComplete(@Valid @RequestBody WidForm body) throws Exception {
+
+        return SeeleRestResponse.ok();
     }
 }

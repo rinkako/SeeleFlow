@@ -26,6 +26,7 @@ import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Class : Workitem
@@ -105,6 +106,9 @@ public class WorkitemContext implements Serializable {
     @JsonIgnore
     @Getter
     private transient boolean logFlushed = false;
+
+//    @JsonIgnore
+//    public transient ReentrantLock SyncLock = new ReentrantLock();
 
     /**
      * Has final result already posted to supervisor and get ACK
@@ -265,52 +269,4 @@ public class WorkitemContext implements Serializable {
         }
         return rm;
     }
-
-    public enum ResourcingStateType {
-        /**
-         * Arrive at Seele, but never handle
-         */
-        CREATED,
-
-        /**
-         * Resourcing finished, notified worker for handle
-         */
-        ALLOCATED,
-
-        /**
-         * Resourcing failed
-         */
-        BAD_ALLOCATED,
-
-        /**
-         * Workitem already cancelled
-         */
-        CANCELLED,
-
-        /**
-         * Accepted by participant, but not handle yet
-         */
-        ACCEPTED,
-
-        /**
-         * Participant already fired the workitem, waiting for complete
-         */
-        RUNNING,
-
-        /**
-         * Workitem finished with any exception
-         */
-        EXCEPTION,
-
-        /**
-         * Workitem was forced to be complete by supervisor request
-         */
-        FORCE_COMPLETED,
-
-        /**
-         * Workitem completed normally
-         */
-        COMPLETED
-    }
-
 }

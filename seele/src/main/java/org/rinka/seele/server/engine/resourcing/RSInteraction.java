@@ -14,6 +14,7 @@ import org.rinka.seele.server.connect.rest.SupervisorRestPool;
 import org.rinka.seele.server.connect.rest.SupervisorTelepathy;
 import org.rinka.seele.server.connect.ws.ParticipantTelepathy;
 import org.rinka.seele.server.engine.resourcing.allocator.Allocator;
+import org.rinka.seele.server.engine.resourcing.context.ResourcingStateType;
 import org.rinka.seele.server.engine.resourcing.context.TaskContext;
 import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
 import org.rinka.seele.server.engine.resourcing.participant.ParticipantContext;
@@ -21,6 +22,7 @@ import org.rinka.seele.server.engine.resourcing.participant.ParticipantPool;
 import org.rinka.seele.server.engine.resourcing.principle.Principle;
 import org.rinka.seele.server.engine.resourcing.queue.WorkQueueContainer;
 import org.rinka.seele.server.engine.resourcing.queue.WorkQueueType;
+import org.rinka.seele.server.engine.resourcing.transition.*;
 import org.rinka.seele.server.logging.RDBWorkitemLogger;
 import org.rinka.seele.server.steady.seele.entity.SeeleItemlogEntity;
 import org.rinka.seele.server.steady.seele.repository.SeeleItemlogRepository;
@@ -44,6 +46,9 @@ import java.util.Set;
 public class RSInteraction {
 
     @Autowired
+    private WorkitemTransitionExecutor transitionExecutor;
+
+    @Autowired
     private SupervisorTelepathy supervisorTelepathy;
 
     @Autowired
@@ -57,7 +62,7 @@ public class RSInteraction {
 
     /**
      * Handle workitem submit directly to RS.
-     *
+     * <p>
      * This method MUST NOT TRANSACTIONAL, since it must ensure that the workitem insert
      * transaction has committed before notifying supervisor.
      */
@@ -91,6 +96,8 @@ public class RSInteraction {
                     WorkQueueContainer container = chosenOne.getQueueContainer();
                     container.setRepository(this.workitemRepository);
                     container.addToQueue(workitem, WorkQueueType.ALLOCATED);
+                    WorkitemTransition transition = new WorkitemTransition(TransitionCallerType.Supervisor, ResourcingStateType.CREATED, ResourcingStateType.ALLOCATED, 0);
+                    this.transitionExecutor.submit(workitem, transition);
                     int handlingCount = chosenOne.getHandlingWorkitemCount().incrementAndGet();
                     this.participantTelepathy.NotifyWorkitemAllocated(chosenOne, workitem);
                     log.info(String.format("Supervisor `%s`(NS:%s) submitted raw task [%s] with %s, " +
@@ -118,73 +125,111 @@ public class RSInteraction {
     }
 
     @Transactional
-    public WorkitemContext acceptWorkitemByParticipant(WorkitemContext workitem, ParticipantContext participant) throws Exception {
+    public WorkitemContext acceptWorkitemByParticipant(int epochId, WorkitemContext workitem, ParticipantContext participant) throws Exception {
         Principle.DispatchType dispatchType = workitem.getPrinciple().getDispatchType();
+        String lastState = workitem.getState().name();
         switch (dispatchType) {
             case ALLOCATE:
                 WorkQueueContainer qContainer = participant.getQueueContainer();
-                qContainer.moveAllocatedToAccepted(workitem);
                 workitem.setEnableTime(Timestamp.from(ZonedDateTime.now().toInstant()));
+                qContainer.moveAllocatedToAccepted(workitem);
+                WorkitemTransition transition = new WorkitemTransition(TransitionCallerType.Participant,
+                        ResourcingStateType.ALLOCATED, ResourcingStateType.ACCEPTED, epochId, new BaseTransitionCallback() {
+                    @Override
+                    public void onExecuted(WorkitemTransitionTracker tracker, WorkitemTransition transition) {
+                        // notify supervisor
+                        notifySupervisorsWorkitemTransition(workitem.getRequestId(), workitem.getNamespace(), workitem, lastState, null);
+                    }
+                });
+                this.transitionExecutor.submit(workitem, transition);
                 break;
             case OFFER:
             default:
                 log.error("unsupported dispatch type: " + dispatchType);
                 break;
         }
-        // notify supervisor
-        this.notifySupervisorsWorkitemTransition(workitem.getRequestId(), workitem.getNamespace(), workitem, WorkitemContext.ResourcingStateType.ALLOCATED.name(), null);
         return workitem;
     }
 
     @Transactional
-    public WorkitemContext startWorkitemByParticipant(WorkitemContext workitem, ParticipantContext participant) throws Exception {
+    public WorkitemContext startWorkitemByParticipant(int epochId, WorkitemContext workitem, ParticipantContext participant) throws Exception {
         Principle.DispatchType dispatchType = workitem.getPrinciple().getDispatchType();
+        String lastState = workitem.getState().name();
         switch (dispatchType) {
             case ALLOCATE:
                 WorkQueueContainer qContainer = participant.getQueueContainer();
-                qContainer.moveAcceptedToStarted(workitem);
                 workitem.setStartTime(Timestamp.from(ZonedDateTime.now().toInstant()));
+                qContainer.moveAcceptedToStarted(workitem);
+                WorkitemTransition transition = new WorkitemTransition(TransitionCallerType.Participant,
+                        ResourcingStateType.ACCEPTED, ResourcingStateType.RUNNING, epochId, new BaseTransitionCallback() {
+                    @Override
+                    public void onExecuted(WorkitemTransitionTracker tracker, WorkitemTransition transition) {
+                        // notify supervisor
+                        notifySupervisorsWorkitemTransition(workitem.getRequestId(), workitem.getNamespace(), workitem, lastState, null);
+                    }
+                });
+                this.transitionExecutor.submit(workitem, transition);
                 break;
             case OFFER:
             default:
                 log.error("unsupported dispatch type: " + dispatchType);
                 break;
         }
-        // notify supervisor
-        this.notifySupervisorsWorkitemTransition(workitem.getRequestId(), workitem.getNamespace(), workitem, WorkitemContext.ResourcingStateType.ALLOCATED.name(), null);
         return workitem;
     }
 
     @Transactional
-    public WorkitemContext completeWorkitemByParticipant(WorkitemContext workitem, ParticipantContext participant) throws Exception {
+    public WorkitemContext completeWorkitemByParticipant(int epochId, WorkitemContext workitem, ParticipantContext participant) throws Exception {
         Principle.DispatchType dispatchType = workitem.getPrinciple().getDispatchType();
+        String lastState = workitem.getState().name();
         switch (dispatchType) {
             case ALLOCATE:
                 WorkQueueContainer qContainer = participant.getQueueContainer();
                 qContainer.removeFromQueue(workitem, WorkQueueType.STARTED);
-                workitem.setState(WorkitemContext.ResourcingStateType.COMPLETED);
                 workitem.setCompleteTime(Timestamp.from(ZonedDateTime.now().toInstant()));
-                workitem.flushSteady();
+                WorkitemTransition transition = new WorkitemTransition(TransitionCallerType.Participant,
+                        ResourcingStateType.RUNNING, ResourcingStateType.COMPLETED, epochId, new BaseTransitionCallback() {
+                    @Override
+                    public void onExecuted(WorkitemTransitionTracker tracker, WorkitemTransition transition) {
+                        if (workitem.isLogArrived()) {
+                            workitem.markLogAlreadyFlushed();
+                            try {
+                                flushLogItem(workitem);
+                            } catch (Exception e) {
+                                log.error("flush log for workitem fault, reset flush flag: " + e.getMessage());
+                                workitem.markLogNotFlush();
+                            }
+                        } else {
+                            log.info("workitem completed, wait for cache GC to flush log");
+                        }
+                        // notify supervisor
+                        notifySupervisorsWorkitemTransition(workitem.getRequestId(), workitem.getNamespace(), workitem, lastState, null);
+                    }
+                });
+                this.transitionExecutor.submit(workitem, transition);
                 break;
             case OFFER:
             default:
                 log.error("unsupported dispatch type: " + dispatchType);
                 break;
         }
-        if (workitem.isLogArrived()) {
-            workitem.markLogAlreadyFlushed();
-            try {
-                this.flushLogItem(workitem);
-            } catch (Exception e) {
-                log.error("flush log for workitem fault, reset flush flag: " + e.getMessage());
-                workitem.markLogNotFlush();
-            }
-        } else {
-            log.info("workitem completed, wait for cache GC to flush log");
-        }
-        // notify supervisor
-        this.notifySupervisorsWorkitemTransition(workitem.getRequestId(), workitem.getNamespace(), workitem, WorkitemContext.ResourcingStateType.ALLOCATED.name(), null);
         return workitem;
+    }
+
+    @Transactional
+    public WorkitemContext forceCompleteWorkitemBySupervisor(CallableSupervisor supervisor, WorkitemContext workitem) {
+//        workitem.SyncLock.lock();
+//        try {
+//            if (workitem.isFinalState()) {
+//                log.warn(String.format("supervisor[%s] request to force complete workitem at final state: %s",
+//                        supervisor.getSupervisorId(), workitem.getWid()));
+//                return workitem;
+//            }
+//            workitem.setState(ResourcingStateType.FORCE_COMPLETED);
+//        } finally {
+//            workitem.SyncLock.unlock();
+//        }
+        return null;
     }
 
     private void notifySupervisorsWorkitemTransition(String requestId, String namespace, WorkitemContext workitem, String prevStateName, Object payload) {
@@ -214,7 +259,7 @@ public class RSInteraction {
     }
 
     @Transactional
-    public void flushLogItem(WorkitemContext workitem) {
+    public synchronized void flushLogItem(WorkitemContext workitem) {
         if (workitem.getLogContainer() instanceof RDBWorkitemLogger) {
             RDBWorkitemLogger rdbLogContainer = (RDBWorkitemLogger) workitem.getLogContainer();
             log.info("using embedded logging, begin flush log with items: " + rdbLogContainer.size());

@@ -6,7 +6,9 @@
 package org.rinka.seele.server.engine.resourcing.queue;
 
 import lombok.Data;
+import org.rinka.seele.server.engine.resourcing.context.ResourcingStateType;
 import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
+import org.rinka.seele.server.engine.resourcing.transition.WorkitemTransition;
 import org.rinka.seele.server.steady.seele.entity.SeeleWorkitemEntity;
 import org.rinka.seele.server.steady.seele.repository.SeeleWorkitemRepository;
 
@@ -63,20 +65,20 @@ public class WorkQueue implements Serializable {
      * @param workitem workitem entity.
      */
     public void addOrUpdate(WorkitemContext workitem) throws Exception {
-        SeeleWorkitemEntity workitemEntity = workitem.getEntity();
-        workitemEntity.setQueueId(this.queueId);
-        switch (this.type) {
-            case ALLOCATED:
-                workitem.setState(WorkitemContext.ResourcingStateType.ALLOCATED);
-                break;
-            case ACCEPTED:
-                workitem.setState(WorkitemContext.ResourcingStateType.ACCEPTED);
-                break;
-            case STARTED:
-                workitem.setState(WorkitemContext.ResourcingStateType.RUNNING);
-                break;
-        }
-        workitem.flushSteady();
+//        SeeleWorkitemEntity workitemEntity = workitem.getEntity();
+//        workitemEntity.setQueueId(this.queueId);
+//        switch (this.type) {
+//            case ALLOCATED:
+//                workitem.setState(ResourcingStateType.ALLOCATED);
+//                break;
+//            case ACCEPTED:
+//                workitem.setState(ResourcingStateType.ACCEPTED);
+//                break;
+//            case STARTED:
+//                workitem.setState(ResourcingStateType.RUNNING);
+//                break;
+//        }
+//        workitem.flushSteady();
         this.workitems.put(workitem.getWid(), workitem);
     }
 

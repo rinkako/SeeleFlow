@@ -13,6 +13,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.rinka.seele.server.engine.resourcing.RSInteraction;
+import org.rinka.seele.server.engine.resourcing.context.ResourcingStateType;
 import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
 import org.rinka.seele.server.engine.resourcing.participant.ParticipantContext;
 import org.rinka.seele.server.engine.resourcing.participant.ParticipantPool;
@@ -43,18 +44,18 @@ public class ParticipantDataListener implements DataListener<String> {
             return;
         }
         log.info(String.format("Mail from participant[%s][%s]: %s", pc.getNamespace(), pc.getDisplayName(), mail.toString()));
-        WorkitemContext.ResourcingStateType rst = Enum.valueOf(WorkitemContext.ResourcingStateType.class, mail.targetState);
+        ResourcingStateType rst = Enum.valueOf(ResourcingStateType.class, mail.targetState);
         WorkitemContext workitem = WorkitemContext.loadByNamespaceAndWid(mail.namespace, mail.workitemId);
         ParticipantContext participant = ParticipantPool.getParticipantBySessionId(client.getSessionId().toString());
         switch (rst) {
             case ACCEPTED:
-                this.interaction.acceptWorkitemByParticipant(workitem, participant);
+                this.interaction.acceptWorkitemByParticipant(mail.epochId, workitem, participant);
                 break;
             case RUNNING:
-                this.interaction.startWorkitemByParticipant(workitem, participant);
+                this.interaction.startWorkitemByParticipant(mail.epochId, workitem, participant);
                 break;
             case COMPLETED:
-                this.interaction.completeWorkitemByParticipant(workitem, participant);
+                this.interaction.completeWorkitemByParticipant(mail.epochId, workitem, participant);
                 break;
         }
     }
@@ -63,6 +64,8 @@ public class ParticipantDataListener implements DataListener<String> {
     @ToString
     @EqualsAndHashCode
     private static class ParticipantRequestMail {
+
+        private int epochId;
 
         private String namespace;
 
