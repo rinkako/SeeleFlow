@@ -21,6 +21,7 @@ public class SeeleWorkitemEntity {
     private long id;
     private String wid;
     private String namespace;
+    private String taskType;
     private long taskId;
     private String taskName;
     private String requestId;
@@ -63,6 +64,16 @@ public class SeeleWorkitemEntity {
 
     public void setNamespace(String namespace) {
         this.namespace = namespace;
+    }
+
+    @Basic
+    @Column(name = "task_type", nullable = false, length = 31)
+    public String getTaskType() {
+        return taskType;
+    }
+
+    public void setTaskType(String taskType) {
+        this.taskType = taskType;
     }
 
     @Basic
@@ -192,7 +203,9 @@ public class SeeleWorkitemEntity {
         SeeleWorkitemEntity that = (SeeleWorkitemEntity) o;
         return id == that.id &&
                 taskId == that.taskId &&
+                Objects.equals(namespace, that.namespace) &&
                 Objects.equals(taskName, that.taskName) &&
+                Objects.equals(taskType, that.taskType) &&
                 Objects.equals(queueId, that.queueId) &&
                 Objects.equals(wid, that.wid) &&
                 Objects.equals(requestId, that.requestId) &&

@@ -58,10 +58,16 @@ public class TaskContext extends RSContext {
     private Map<String, Object> cachedArgs;
 
     @JsonIgnore
-    private transient SeeleTaskRepository permanentRepository;
+    private static SeeleTaskRepository permanentRepository;
 
     @JsonIgnore
-    private transient SeeleRawtaskRepository rawRepository;
+    private static SeeleRawtaskRepository rawRepository;
+
+    public static void bindingRepository(SeeleTaskRepository permanentRepository,
+                                         SeeleRawtaskRepository rawRepository) {
+        TaskContext.permanentRepository = permanentRepository;
+        TaskContext.rawRepository = rawRepository;
+    }
 
     public static TaskContext createRawFrom(String requestId,
                                             String namespace,
@@ -69,13 +75,12 @@ public class TaskContext extends RSContext {
                                             String taskName,
                                             Principle principle,
                                             String skill,
-                                            Map<String, Object> args,
-                                            SeeleRawtaskRepository repository) {
+                                            Map<String, Object> args) {
         return TaskContext.rawCachePool
                 .computeIfAbsent(namespace, ns -> new ConcurrentHashMap<>())
                 .computeIfAbsent(requestId, tn -> {
                     TaskContext task = new TaskContext();
-                    SeeleRawtaskEntity taskEntity = repository.findByRequestId(requestId);
+                    SeeleRawtaskEntity taskEntity = TaskContext.rawRepository.findByRequestId(requestId);
                     if (taskEntity == null) {
                         taskEntity = new SeeleRawtaskEntity();
                         taskEntity.setCreator(GDP.SeeleId);
@@ -94,7 +99,7 @@ public class TaskContext extends RSContext {
                             taskEntity.setArguments("{}");
                             log.error("cannot dump argument for task: " + e.getMessage());
                         }
-                        taskEntity = repository.save(taskEntity);
+                        taskEntity = TaskContext.rawRepository.save(taskEntity);
                     } else {
                         log.warn("raw submit with duplicate requestId, although the workitem will be generated and resourcing normally");
                     }
@@ -104,10 +109,24 @@ public class TaskContext extends RSContext {
                     task.setNamespace(namespace);
                     task.cachedArgs = args;
                     task.principle = principle;
-                    task.rawRepository = repository;
-                    task.permanentRepository = null;
+                    TaskContext.permanentRepository = null;
                     return task;
                 });
+    }
+
+    public static TaskContext getRawContextByRequestId(String namespace, String requestId) {
+        ConcurrentHashMap<String, TaskContext> pool = TaskContext.rawCachePool.computeIfAbsent(namespace, n -> new ConcurrentHashMap<>());
+        TaskContext task = pool.get(requestId);
+        if (task != null) {
+            return task;
+        }
+        task = new TaskContext();
+        task.setRequestId(requestId);
+        task.setNamespace(namespace);
+        task.setSubmitType(ResourcingTaskSubmitType.RAW);
+        task.refreshSteady();
+        task.addSelfToCache();
+        return task;
     }
 
     @Transactional
@@ -122,9 +141,9 @@ public class TaskContext extends RSContext {
     @Transactional
     public void flushSteady() {
         if (this.submitType == ResourcingTaskSubmitType.RAW) {
-            this.rawRepository.save(this.rawEntity);
+            TaskContext.rawRepository.save(this.rawEntity);
         } else {
-            this.permanentRepository.save(this.permanentEntity);
+            TaskContext.permanentRepository.save(this.permanentEntity);
         }
     }
 
@@ -132,10 +151,23 @@ public class TaskContext extends RSContext {
     public void refreshSteady() {
         String ns = this.getNamespace();
         if (this.submitType == ResourcingTaskSubmitType.RAW) {
-            this.rawEntity = this.rawRepository.findByRequestId(this.requestId);
+            this.rawEntity = TaskContext.rawRepository.findByRequestId(this.requestId);
+            this.principle = Principle.of(this.rawEntity.getPrinciple());
+            try {
+                this.cachedArgs = JsonUtil.parse(this.rawEntity.getArguments(), Map.class);
+            } catch (JsonProcessingException e) {
+                this.cachedArgs = null;
+            }
         } else {
             String taskName = this.permanentEntity.getName();
-            this.permanentEntity = this.permanentRepository.findByNamespaceAndName(ns, taskName);
+            this.permanentEntity = TaskContext.permanentRepository.findByNamespaceAndName(ns, taskName);
+        }
+    }
+
+    public void addSelfToCache() {
+        if (this.submitType == ResourcingTaskSubmitType.RAW) {
+            ConcurrentHashMap<String, TaskContext> pool = TaskContext.rawCachePool.computeIfAbsent(this.getNamespace(), n -> new ConcurrentHashMap<>());
+            pool.put(this.requestId, this);
         }
     }
 

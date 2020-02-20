@@ -27,6 +27,8 @@ import org.rinka.seele.server.logging.RDBWorkitemLogger;
 import org.rinka.seele.server.steady.seele.entity.SeeleItemlogEntity;
 import org.rinka.seele.server.steady.seele.entity.SeeleWorkitemEntity;
 import org.rinka.seele.server.steady.seele.repository.SeeleItemlogRepository;
+import org.rinka.seele.server.steady.seele.repository.SeeleRawtaskRepository;
+import org.rinka.seele.server.steady.seele.repository.SeeleTaskRepository;
 import org.rinka.seele.server.steady.seele.repository.SeeleWorkitemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -63,6 +65,12 @@ public class RSInteraction {
 
     @Autowired
     private SeeleItemlogRepository itemlogRepository;
+
+    @Autowired
+    private SeeleTaskRepository permanentTaskRepository;
+
+    @Autowired
+    private SeeleRawtaskRepository rawTaskRepository;
 
     /**
      * Handle workitem submit directly to RS.
@@ -125,7 +133,7 @@ public class RSInteraction {
      */
     @Transactional
     protected WorkitemContext createWorkitemTransactional(TaskContext context) throws Exception {
-        return WorkitemContext.createFrom(context, this.workitemRepository);
+        return WorkitemContext.createFrom(context);
     }
 
     @Transactional
@@ -295,6 +303,10 @@ public class RSInteraction {
 
     @PostConstruct
     private void init() {
+        // binding repositories
+        WorkitemContext.bindingRepository(this.workitemRepository);
+        TaskContext.bindingRepository(this.permanentTaskRepository, this.rawTaskRepository);
+        // load active workitem
         Set<String> activeSet = new HashSet<>();
         activeSet.add(ResourcingStateType.BAD_ALLOCATED.name());
         activeSet.add(ResourcingStateType.ALLOCATED.name());
@@ -305,7 +317,7 @@ public class RSInteraction {
         int succeedCount = 0;
         for (SeeleWorkitemEntity swe : activeEntities) {
             try {
-                WorkitemContext.createFrom(swe, this.workitemRepository);
+                WorkitemContext.createFrom(swe);
                 succeedCount++;
             } catch (Exception e) {
                 log.error("load active workitem fault, ignored: " + e.getMessage());

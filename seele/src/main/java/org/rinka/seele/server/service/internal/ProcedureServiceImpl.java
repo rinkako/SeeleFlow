@@ -29,12 +29,6 @@ public class ProcedureServiceImpl implements ProcedureService {
     @Autowired
     private RSInteraction interaction;
 
-    @Autowired
-    private SeeleTaskRepository permanentTaskRepository;
-
-    @Autowired
-    private SeeleRawtaskRepository rawTaskRepository;
-
     /**
      * Convert workitem submit directly request to resourcing interaction.
      *
@@ -61,7 +55,7 @@ public class ProcedureServiceImpl implements ProcedureService {
                                                               Map<String, Object> args) throws Exception {
 
         TaskContext task = TaskContext.createRawFrom(requestId, namespace, supervisorId,
-                taskName, Principle.of(principleDescriptor), skill, args, this.rawTaskRepository);
+                taskName, Principle.of(principleDescriptor), skill, args);
         return this.interaction.supervisorSubmitTask(task);
     }
 

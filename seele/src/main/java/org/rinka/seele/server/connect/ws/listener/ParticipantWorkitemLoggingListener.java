@@ -43,8 +43,7 @@ public class ParticipantWorkitemLoggingListener implements DataListener<String> 
             String content = (String) parsedLog.get("log");
             // TODO DEBUG
             log.info(String.format("Workitem[%s] logging: %s", wid, content));
-            // TODO 重启后有问题，因为namespace不存在
-            WorkitemContext workitem = WorkitemContext.loadByWid(wid, repository);
+            WorkitemContext workitem = WorkitemContext.loadByWid(wid);
             if (bulk) {
                 List<String> lines = JsonUtil.parseRaw(content, new TypeReference<List<String>>() {});
                 boolean eofFlag = false;

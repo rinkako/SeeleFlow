@@ -48,6 +48,15 @@ public class Principle implements Serializable {
         }
     }
 
+    public static Principle of(String descriptor) {
+        try {
+            return JsonUtil.parseRaw(descriptor, new TypeReference<Principle>() {});
+        } catch (JsonProcessingException e) {
+            log.error("cannot parse principle: " + e.getMessage());
+            return null;
+        }
+    }
+
     public String getDescriptor() {
         try {
             Map<String, Object> map = new HashMap<>();

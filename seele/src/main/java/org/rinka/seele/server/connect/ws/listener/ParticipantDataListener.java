@@ -33,9 +33,6 @@ public class ParticipantDataListener implements DataListener<String> {
     @Autowired
     private RSInteraction interaction;
 
-    @Autowired
-    private SeeleWorkitemRepository repository;
-
     private static final String MESSAGE_OUT_OF_MANAGE = "OUT_OF_SERVER_MANAGEMENT";
 
     @Override
@@ -49,7 +46,7 @@ public class ParticipantDataListener implements DataListener<String> {
         }
         log.info(String.format("Mail from participant[%s][%s]: %s", pc.getNamespace(), pc.getDisplayName(), mail.toString()));
         ResourcingStateType rst = Enum.valueOf(ResourcingStateType.class, mail.targetState);
-        WorkitemContext workitem = WorkitemContext.loadByNamespaceAndWid(mail.namespace, mail.workitemId, this.repository);
+        WorkitemContext workitem = WorkitemContext.loadByNamespaceAndWid(mail.namespace, mail.workitemId);
         ParticipantContext participant = ParticipantPool.getParticipantBySessionId(client.getSessionId().toString());
         switch (rst) {
             case ACCEPTED:
