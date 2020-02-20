@@ -182,6 +182,7 @@ public class WorkQueueContainer {
      * @param type     queue type
      */
     public WorkitemContext removeFromQueue(WorkitemContext workitem, WorkQueueType type) {
+        workitem.setQueueReference(null);
         return this.getQueue(type).remove(workitem);
     }
 

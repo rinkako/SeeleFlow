@@ -21,6 +21,9 @@ public class JsonUtil {
     public static final ObjectMapper Mapper = new ObjectMapper();
 
     public static String dumps(Object dumper) throws JsonProcessingException {
+        if (dumper == null) {
+            return null;
+        }
         return JsonUtil.Mapper.writeValueAsString(dumper);
     }
 

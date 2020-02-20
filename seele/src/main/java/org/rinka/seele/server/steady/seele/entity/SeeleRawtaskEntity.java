@@ -12,16 +12,16 @@ import java.sql.Timestamp;
 import java.util.Objects;
 
 /**
- * Class : SeeleTaskEntity
+ * Class : SeeleRawtaskEntity
  * Usage :
  */
 @ToString
 @Entity
-@Table(name = "seele_task", schema = "seele_workflow")
-public class SeeleTaskEntity {
+@Table(name = "seele_rawtask", schema = "seele_workflow")
+public class SeeleRawtaskEntity {
     private long id;
+    private String requestId;
     private String namespace;
-    private String procedureName;
     private String name;
     private String skill;
     private String principle;
@@ -29,7 +29,9 @@ public class SeeleTaskEntity {
     private String arguments;
     private String eventCallbackMask;
     private String hooks;
-    private String creatorSupervisor;
+    private String submitter;
+    private String creator;
+    private Timestamp finishTime;
     private Timestamp updatetime;
     private Timestamp newdate;
 
@@ -45,6 +47,17 @@ public class SeeleTaskEntity {
     }
 
     @Basic
+    @Column(name = "request_id", nullable = false, length = 63)
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
+
+
+    @Basic
     @Column(name = "namespace", nullable = false, length = 255)
     public String getNamespace() {
         return namespace;
@@ -52,16 +65,6 @@ public class SeeleTaskEntity {
 
     public void setNamespace(String namespace) {
         this.namespace = namespace;
-    }
-
-    @Basic
-    @Column(name = "procedure_name", nullable = false, length = 255)
-    public String getProcedureName() {
-        return procedureName;
-    }
-
-    public void setProcedureName(String procedureName) {
-        this.procedureName = procedureName;
     }
 
     @Basic
@@ -135,13 +138,33 @@ public class SeeleTaskEntity {
     }
 
     @Basic
-    @Column(name = "creator_supervisor", nullable = false, length = 255)
-    public String getCreatorSupervisor() {
-        return creatorSupervisor;
+    @Column(name = "submitter", nullable = false, length = 127)
+    public String getSubmitter() {
+        return submitter;
     }
 
-    public void setCreatorSupervisor(String creatorSupervisor) {
-        this.creatorSupervisor = creatorSupervisor;
+    public void setSubmitter(String submitter) {
+        this.submitter = submitter;
+    }
+
+    @Basic
+    @Column(name = "creator", nullable = false, length = 127)
+    public String getCreator() {
+        return creator;
+    }
+
+    public void setCreator(String creator) {
+        this.creator = creator;
+    }
+
+    @Basic
+    @Column(name = "finish_time")
+    public Timestamp getFinishTime() {
+        return finishTime;
+    }
+
+    public void setFinishTime(Timestamp finishTime) {
+        this.finishTime = finishTime;
     }
 
     @Basic
@@ -168,10 +191,9 @@ public class SeeleTaskEntity {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        SeeleTaskEntity that = (SeeleTaskEntity) o;
+        SeeleRawtaskEntity that = (SeeleRawtaskEntity) o;
         return id == that.id &&
                 Objects.equals(namespace, that.namespace) &&
-                Objects.equals(procedureName, that.procedureName) &&
                 Objects.equals(name, that.name) &&
                 Objects.equals(skill, that.skill) &&
                 Objects.equals(principle, that.principle) &&
@@ -179,13 +201,14 @@ public class SeeleTaskEntity {
                 Objects.equals(arguments, that.arguments) &&
                 Objects.equals(eventCallbackMask, that.eventCallbackMask) &&
                 Objects.equals(hooks, that.hooks) &&
-                Objects.equals(creatorSupervisor, that.creatorSupervisor) &&
+                Objects.equals(submitter, that.submitter) &&
+                Objects.equals(creator, that.creator) &&
                 Objects.equals(updatetime, that.updatetime) &&
                 Objects.equals(newdate, that.newdate);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, namespace, procedureName, name, skill, principle, documentation, arguments, eventCallbackMask, hooks, creatorSupervisor, updatetime, newdate);
+        return Objects.hash(id, namespace, name, skill, principle, documentation, arguments, eventCallbackMask, hooks, submitter, creator, updatetime, newdate);
     }
 }

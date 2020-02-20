@@ -66,19 +66,25 @@ public class WorkitemTransition implements Serializable {
         this.callback = callback;
     }
 
-    void onExecuted(WorkitemTransitionTracker transitionTracker) {
+    void onPrepareExecute(WorkitemTransitionTracker transitionTracker) throws Exception {
+        if (this.callback != null) {
+            this.callback.onPrepareExecute(transitionTracker, this);
+        }
+    }
+
+    void onExecuted(WorkitemTransitionTracker transitionTracker) throws Exception {
         if (this.callback != null) {
             this.callback.onExecuted(transitionTracker, this);
         }
     }
 
-    void onFailed(WorkitemTransitionTracker transitionTracker) {
+    void onFailed(WorkitemTransitionTracker transitionTracker) throws Exception {
         if (this.callback != null) {
             this.callback.onFailed(transitionTracker, this);
         }
     }
 
-    void onIgnored(WorkitemTransitionTracker transitionTracker) {
+    void onIgnored(WorkitemTransitionTracker transitionTracker) throws Exception {
         if (this.callback != null) {
             this.callback.onIgnored(transitionTracker, this);
         }

@@ -20,6 +20,7 @@ import java.util.Objects;
 public class SeeleWorkitemEntity {
     private long id;
     private String wid;
+    private String namespace;
     private long taskId;
     private String taskName;
     private String requestId;
@@ -52,6 +53,16 @@ public class SeeleWorkitemEntity {
 
     public void setWid(String wid) {
         this.wid = wid;
+    }
+
+    @Basic
+    @Column(name = "namespace", nullable = false, length = 255)
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
     }
 
     @Basic

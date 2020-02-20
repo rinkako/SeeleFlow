@@ -78,6 +78,7 @@ public class WorkitemTransitionTracker {
 
     private synchronized boolean microStepTransition(WorkitemTransition transition) throws Exception {
         if (WorkitemTransition.isTransitionable(this.workitem, transition)) {
+            transition.onPrepareExecute(this);
             this.workitem.setState(transition.getTarget());
             this.workitem.flushSteady();
             return true;

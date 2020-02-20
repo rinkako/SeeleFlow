@@ -10,6 +10,8 @@ import org.rinka.seele.server.engine.resourcing.RSInteraction;
 import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
 import org.rinka.seele.server.engine.resourcing.context.TaskContext;
 import org.rinka.seele.server.engine.resourcing.principle.Principle;
+import org.rinka.seele.server.steady.seele.repository.SeeleRawtaskRepository;
+import org.rinka.seele.server.steady.seele.repository.SeeleTaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,12 @@ public class ProcedureServiceImpl implements ProcedureService {
 
     @Autowired
     private RSInteraction interaction;
+
+    @Autowired
+    private SeeleTaskRepository permanentTaskRepository;
+
+    @Autowired
+    private SeeleRawtaskRepository rawTaskRepository;
 
     /**
      * Convert workitem submit directly request to resourcing interaction.
@@ -51,15 +59,9 @@ public class ProcedureServiceImpl implements ProcedureService {
                                                               PrincipleForm principleDescriptor,
                                                               String skill,
                                                               Map<String, Object> args) throws Exception {
-        TaskContext task = new TaskContext();
-        task.setNamespace(namespace);
-        task.setTaskName(taskName);
-        task.setArgs(args);
-        task.setSkill(skill);
-        task.setSupervisorId(supervisorId);
-        task.setRequestId(requestId);
-        task.setSubmitType(TaskContext.ResourcingTaskSubmitType.DIRECT);
-        task.setPrinciple(Principle.of(principleDescriptor));
+
+        TaskContext task = TaskContext.createRawFrom(requestId, namespace, supervisorId,
+                taskName, Principle.of(principleDescriptor), skill, args, this.rawTaskRepository);
         return this.interaction.supervisorSubmitTask(task);
     }
 

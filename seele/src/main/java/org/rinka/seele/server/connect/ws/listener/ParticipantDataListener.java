@@ -17,6 +17,7 @@ import org.rinka.seele.server.engine.resourcing.context.ResourcingStateType;
 import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
 import org.rinka.seele.server.engine.resourcing.participant.ParticipantContext;
 import org.rinka.seele.server.engine.resourcing.participant.ParticipantPool;
+import org.rinka.seele.server.steady.seele.repository.SeeleWorkitemRepository;
 import org.rinka.seele.server.util.JsonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -32,6 +33,9 @@ public class ParticipantDataListener implements DataListener<String> {
     @Autowired
     private RSInteraction interaction;
 
+    @Autowired
+    private SeeleWorkitemRepository repository;
+
     private static final String MESSAGE_OUT_OF_MANAGE = "OUT_OF_SERVER_MANAGEMENT";
 
     @Override
@@ -45,7 +49,7 @@ public class ParticipantDataListener implements DataListener<String> {
         }
         log.info(String.format("Mail from participant[%s][%s]: %s", pc.getNamespace(), pc.getDisplayName(), mail.toString()));
         ResourcingStateType rst = Enum.valueOf(ResourcingStateType.class, mail.targetState);
-        WorkitemContext workitem = WorkitemContext.loadByNamespaceAndWid(mail.namespace, mail.workitemId);
+        WorkitemContext workitem = WorkitemContext.loadByNamespaceAndWid(mail.namespace, mail.workitemId, this.repository);
         ParticipantContext participant = ParticipantPool.getParticipantBySessionId(client.getSessionId().toString());
         switch (rst) {
             case ACCEPTED:

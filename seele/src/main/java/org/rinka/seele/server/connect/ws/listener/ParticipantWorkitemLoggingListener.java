@@ -13,7 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
 import org.rinka.seele.server.engine.resourcing.participant.ParticipantContext;
 import org.rinka.seele.server.engine.resourcing.participant.ParticipantPool;
+import org.rinka.seele.server.steady.seele.repository.SeeleWorkitemRepository;
 import org.rinka.seele.server.util.JsonUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -27,6 +29,9 @@ import java.util.Map;
 @Component
 public class ParticipantWorkitemLoggingListener implements DataListener<String> {
 
+    @Autowired
+    private SeeleWorkitemRepository repository;
+
     public static final String MESSAGE_EOF = "___SEELE_LOG_EOF___";
 
     @Override
@@ -38,7 +43,8 @@ public class ParticipantWorkitemLoggingListener implements DataListener<String> 
             String content = (String) parsedLog.get("log");
             // TODO DEBUG
             log.info(String.format("Workitem[%s] logging: %s", wid, content));
-            WorkitemContext workitem = WorkitemContext.loadByWid(wid);
+            // TODO 重启后有问题，因为namespace不存在
+            WorkitemContext workitem = WorkitemContext.loadByWid(wid, repository);
             if (bulk) {
                 List<String> lines = JsonUtil.parseRaw(content, new TypeReference<List<String>>() {});
                 boolean eofFlag = false;

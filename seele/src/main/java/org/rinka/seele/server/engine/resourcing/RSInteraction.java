@@ -25,15 +25,19 @@ import org.rinka.seele.server.engine.resourcing.queue.WorkQueueType;
 import org.rinka.seele.server.engine.resourcing.transition.*;
 import org.rinka.seele.server.logging.RDBWorkitemLogger;
 import org.rinka.seele.server.steady.seele.entity.SeeleItemlogEntity;
+import org.rinka.seele.server.steady.seele.entity.SeeleWorkitemEntity;
 import org.rinka.seele.server.steady.seele.repository.SeeleItemlogRepository;
 import org.rinka.seele.server.steady.seele.repository.SeeleWorkitemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.PostConstruct;
 import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
 import java.time.ZonedDateTime;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -102,7 +106,7 @@ public class RSInteraction {
                     this.participantTelepathy.NotifyWorkitemAllocated(chosenOne, workitem);
                     log.info(String.format("Supervisor `%s`(NS:%s) submitted raw task [%s] with %s, " +
                                     "Seele allocated it to participant [%s], with running workitem count: %s",
-                            context.getSupervisorId(), context.getNamespace(), context.getTaskName(),
+                            context.getRawEntity().getSubmitter(), context.getNamespace(), context.getRawEntity().getName(),
                             context.getPrinciple(), chosenOne.getDisplayName(), handlingCount));
                     break;
                 case OFFER:
@@ -130,11 +134,15 @@ public class RSInteraction {
         String lastState = workitem.getState().name();
         switch (dispatchType) {
             case ALLOCATE:
-                WorkQueueContainer qContainer = participant.getQueueContainer();
-                workitem.setEnableTime(Timestamp.from(ZonedDateTime.now().toInstant()));
-                qContainer.moveAllocatedToAccepted(workitem);
                 WorkitemTransition transition = new WorkitemTransition(TransitionCallerType.Participant,
                         ResourcingStateType.ALLOCATED, ResourcingStateType.ACCEPTED, epochId, new BaseTransitionCallback() {
+                    @Override
+                    public void onPrepareExecute(WorkitemTransitionTracker tracker, WorkitemTransition transition) throws Exception {
+                        WorkQueueContainer qContainer = participant.getQueueContainer();
+                        workitem.setEnableTime(Timestamp.from(ZonedDateTime.now().toInstant()));
+                        qContainer.moveAllocatedToAccepted(workitem);
+                    }
+
                     @Override
                     public void onExecuted(WorkitemTransitionTracker tracker, WorkitemTransition transition) {
                         // notify supervisor
@@ -157,11 +165,15 @@ public class RSInteraction {
         String lastState = workitem.getState().name();
         switch (dispatchType) {
             case ALLOCATE:
-                WorkQueueContainer qContainer = participant.getQueueContainer();
-                workitem.setStartTime(Timestamp.from(ZonedDateTime.now().toInstant()));
-                qContainer.moveAcceptedToStarted(workitem);
                 WorkitemTransition transition = new WorkitemTransition(TransitionCallerType.Participant,
                         ResourcingStateType.ACCEPTED, ResourcingStateType.RUNNING, epochId, new BaseTransitionCallback() {
+                    @Override
+                    public void onPrepareExecute(WorkitemTransitionTracker tracker, WorkitemTransition transition) throws Exception {
+                        WorkQueueContainer qContainer = participant.getQueueContainer();
+                        workitem.setStartTime(Timestamp.from(ZonedDateTime.now().toInstant()));
+                        qContainer.moveAcceptedToStarted(workitem);
+                    }
+
                     @Override
                     public void onExecuted(WorkitemTransitionTracker tracker, WorkitemTransition transition) {
                         // notify supervisor
@@ -184,11 +196,16 @@ public class RSInteraction {
         String lastState = workitem.getState().name();
         switch (dispatchType) {
             case ALLOCATE:
-                WorkQueueContainer qContainer = participant.getQueueContainer();
-                qContainer.removeFromQueue(workitem, WorkQueueType.STARTED);
-                workitem.setCompleteTime(Timestamp.from(ZonedDateTime.now().toInstant()));
                 WorkitemTransition transition = new WorkitemTransition(TransitionCallerType.Participant,
                         ResourcingStateType.RUNNING, ResourcingStateType.COMPLETED, epochId, new BaseTransitionCallback() {
+
+                    @Override
+                    public void onPrepareExecute(WorkitemTransitionTracker tracker, WorkitemTransition transition) {
+                        WorkQueueContainer qContainer = participant.getQueueContainer();
+                        qContainer.removeFromQueue(workitem, WorkQueueType.STARTED);
+                        workitem.setCompleteTime(Timestamp.from(ZonedDateTime.now().toInstant()));
+                    }
+
                     @Override
                     public void onExecuted(WorkitemTransitionTracker tracker, WorkitemTransition transition) {
                         if (workitem.isLogArrived()) {
@@ -204,6 +221,8 @@ public class RSInteraction {
                         }
                         // notify supervisor
                         notifySupervisorsWorkitemTransition(workitem.getRequestId(), workitem.getNamespace(), workitem, lastState, null);
+                        // complete the task
+                        workitem.getTaskTemplate().markAsFinish();
                     }
                 });
                 this.transitionExecutor.submit(workitem, transition);
@@ -272,6 +291,27 @@ public class RSInteraction {
             rdbLogContainer.clear();
             log.info("workitem log flushed");
         }
+    }
+
+    @PostConstruct
+    private void init() {
+        Set<String> activeSet = new HashSet<>();
+        activeSet.add(ResourcingStateType.BAD_ALLOCATED.name());
+        activeSet.add(ResourcingStateType.ALLOCATED.name());
+        activeSet.add(ResourcingStateType.ACCEPTED.name());
+        activeSet.add(ResourcingStateType.RUNNING.name());
+        log.info("loading active workitem in steady");
+        List<SeeleWorkitemEntity> activeEntities = this.workitemRepository.findAllByStateIn(activeSet);
+        int succeedCount = 0;
+        for (SeeleWorkitemEntity swe : activeEntities) {
+            try {
+                WorkitemContext.createFrom(swe, this.workitemRepository);
+                succeedCount++;
+            } catch (Exception e) {
+                log.error("load active workitem fault, ignored: " + e.getMessage());
+            }
+        }
+        log.info(String.format("loaded active workitem in steady: %s/%s", succeedCount, activeEntities.size()));
     }
 
     @Data

@@ -13,8 +13,11 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.rinka.seele.server.engine.resourcing.principle.Principle;
+import org.rinka.seele.server.engine.resourcing.queue.WorkQueue;
 import org.rinka.seele.server.logging.RDBWorkitemLogger;
 import org.rinka.seele.server.logging.WorkitemLogger;
+import org.rinka.seele.server.steady.seele.entity.SeeleRawtaskEntity;
+import org.rinka.seele.server.steady.seele.entity.SeeleTaskEntity;
 import org.rinka.seele.server.steady.seele.entity.SeeleWorkitemEntity;
 import org.rinka.seele.server.steady.seele.repository.SeeleWorkitemRepository;
 import org.rinka.seele.server.util.JsonUtil;
@@ -91,6 +94,10 @@ public class WorkitemContext implements Serializable {
     @Setter
     private Timestamp completeTime;
 
+    @JsonIgnore
+    @Getter
+    private TaskContext taskTemplate;
+
     @SuppressWarnings({"rawtypes"})
     @Getter
     @JsonIgnore
@@ -107,8 +114,10 @@ public class WorkitemContext implements Serializable {
     @Getter
     private transient boolean logFlushed = false;
 
-//    @JsonIgnore
-//    public transient ReentrantLock SyncLock = new ReentrantLock();
+    @JsonIgnore
+    @Getter
+    @Setter
+    private transient WorkQueue queueReference;
 
     /**
      * Has final result already posted to supervisor and get ACK
@@ -132,49 +141,75 @@ public class WorkitemContext implements Serializable {
     }
 
     public boolean isFinalState() {
-        return this.state == ResourcingStateType.COMPLETED ||
-                this.state == ResourcingStateType.EXCEPTION ||
-                this.state == ResourcingStateType.CANCELLED ||
-                this.state == ResourcingStateType.FORCE_COMPLETED ||
-                this.state == ResourcingStateType.BAD_ALLOCATED;
+        return WorkitemContext.isFinalState(this.state);
     }
 
     public static WorkitemContext createFrom(TaskContext task,
                                              SeeleWorkitemRepository repository) throws Exception {
         WorkitemContext workitem = new WorkitemContext();
+        workitem.taskTemplate = task;
         workitem.namespace = task.getNamespace();
-        workitem.args = task.getArgs();
-        workitem.process = null;  // todo
-        workitem.skill = task.getSkill();
         workitem.state = ResourcingStateType.CREATED;
         workitem.requestId = task.getRequestId();
         workitem.repository = repository;
         workitem.createTime = Timestamp.from(ZonedDateTime.now().toInstant());
-        workitem.taskName = task.getTaskName();
         workitem.principle = task.getPrinciple();
+        if (task.getSubmitType() == TaskContext.ResourcingTaskSubmitType.RAW) {
+            SeeleRawtaskEntity taskTpl = task.getRawEntity();
+            workitem.process = null;
+            workitem.skill = taskTpl.getSkill();
+            workitem.taskName = taskTpl.getName();
+            workitem.args = task.getCachedArgs();
+        } else {
+            // todo
+            SeeleTaskEntity taskTpl = task.getPermanentEntity();
+            workitem.process = null;
+            workitem.skill = taskTpl.getSkill();
+            workitem.taskName = taskTpl.getName();
+        }
         workitem.logContainer = new RDBWorkitemLogger();
         workitem.flushSteady();
         workitem.addSelfToCache();
         return workitem;
     }
 
-    public static WorkitemContext loadByWid(String wid) {
-        WorkitemContext workitem = WorkitemContext.getFromCache(wid);
-        if (workitem == null) {
-            workitem = new WorkitemContext();
-            workitem.wid = wid;
-            // todo repository ref
-            workitem.refreshSteady();
-            workitem.addSelfToCache();
-        }
+    public static WorkitemContext createFrom(SeeleWorkitemEntity swe, SeeleWorkitemRepository repository) {
+        WorkitemContext workitem = new WorkitemContext();
+        workitem.repository = repository;
+        workitem.refreshSteady(swe);
+        workitem.addSelfToCache();
         return workitem;
     }
 
-    public static WorkitemContext loadByNamespaceAndWid(String namespace, String wid) {
+    public static WorkitemContext loadByWid(String wid, SeeleWorkitemRepository repository) {
+        WorkitemContext workitem = WorkitemContext.getFromCache(wid);
+        return WorkitemContext.syncSteady(wid, repository, workitem);
+    }
+
+    public static WorkitemContext loadByNamespaceAndWid(String namespace, String wid, SeeleWorkitemRepository repository) {
         WorkitemContext workitem = WorkitemContext.getFromCache(namespace, wid);
+        return WorkitemContext.syncSteady(wid, repository, workitem);
+    }
+
+    public static boolean isFinalState(ResourcingStateType state) {
+        return state == ResourcingStateType.COMPLETED ||
+                state == ResourcingStateType.EXCEPTION ||
+                state == ResourcingStateType.CANCELLED ||
+                state == ResourcingStateType.FORCE_COMPLETED ||
+                state == ResourcingStateType.BAD_ALLOCATED;
+    }
+
+    public static boolean isActiveState(ResourcingStateType state) {
+        return !WorkitemContext.isFinalState(state);
+    }
+
+    private static WorkitemContext syncSteady(String wid, SeeleWorkitemRepository repository, WorkitemContext workitem) {
         if (workitem == null) {
             workitem = new WorkitemContext();
             workitem.wid = wid;
+            if (workitem.repository == null) {
+                workitem.repository = repository;
+            }
             workitem.refreshSteady();
             workitem.addSelfToCache();
         }
@@ -192,12 +227,23 @@ public class WorkitemContext implements Serializable {
         if (this.wid == null) {
             SeeleWorkitemEntity swe = new SeeleWorkitemEntity();
             swe.setRequestId(this.requestId);
-            swe.setTaskId(0);  // todo
+            TaskContext task = this.taskTemplate;
+            if (task.getSubmitType() == TaskContext.ResourcingTaskSubmitType.RAW) {
+                swe.setTaskId(task.getRawEntity().getId());
+            } else {
+                swe.setTaskId(task.getPermanentEntity().getId());
+            }
+            swe.setNamespace(this.namespace);
             swe.setArguments(JsonUtil.dumps(this.args));
             swe.setWid(UUID.randomUUID().toString());
             swe.setState(this.state.name());
             swe.setCreateTime(this.createTime);
             swe.setTaskName(this.taskName);
+            if (this.queueReference != null) {
+                swe.setQueueId(this.queueReference.getQueueId());
+            } else {
+                swe.setQueueId(null);
+            }
             this.entity = this.repository.save(swe);
             this.wid = this.entity.getWid();
         } else {
@@ -208,6 +254,11 @@ public class WorkitemContext implements Serializable {
             this.entity.setEnableTime(this.enableTime);
             this.entity.setStartTime(this.startTime);
             this.entity.setCompleteTime(this.completeTime);
+            if (this.queueReference != null) {
+                this.entity.setQueueId(this.queueReference.getQueueId());
+            } else {
+                this.entity.setQueueId(null);
+            }
             this.repository.saveAndFlush(this.entity);
         }
     }
@@ -223,7 +274,13 @@ public class WorkitemContext implements Serializable {
             log.error("cannot refresh workitem since not exist steady");
             return;
         }
+        this.refreshSteady(swe);
+    }
+
+    public void refreshSteady(SeeleWorkitemEntity swe) {
         this.entity = swe;
+        this.wid = swe.getWid();
+        this.namespace = swe.getNamespace();
         this.requestId = swe.getRequestId();
         this.createTime = swe.getCreateTime();
         this.enableTime = swe.getEnableTime();

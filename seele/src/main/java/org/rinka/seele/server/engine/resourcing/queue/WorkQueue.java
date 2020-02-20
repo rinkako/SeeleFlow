@@ -79,6 +79,7 @@ public class WorkQueue implements Serializable {
 //                break;
 //        }
 //        workitem.flushSteady();
+        workitem.setQueueReference(this);
         this.workitems.put(workitem.getWid(), workitem);
     }
 

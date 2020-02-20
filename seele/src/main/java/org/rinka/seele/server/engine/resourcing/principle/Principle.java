@@ -4,6 +4,8 @@
  */
 package org.rinka.seele.server.engine.resourcing.principle;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -12,6 +14,7 @@ import org.rinka.seele.server.api.form.PrincipleForm;
 import org.rinka.seele.server.util.JsonUtil;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -41,6 +44,19 @@ public class Principle implements Serializable {
         }
         catch (Exception ex) {
             log.error("cannot parse principle: " + ex.getMessage());
+            return null;
+        }
+    }
+
+    public String getDescriptor() {
+        try {
+            Map<String, Object> map = new HashMap<>();
+            map.put("dispatchType", this.dispatchType.name());
+            map.put("dispatcherName", this.dispatcherName);
+            map.put("dispatcherArgs", JsonUtil.dumps(this.dispatcherArgs));
+            return JsonUtil.dumps(map);
+        } catch (JsonProcessingException e) {
+            log.error("cannot dump json: " + e.getMessage());
             return null;
         }
     }

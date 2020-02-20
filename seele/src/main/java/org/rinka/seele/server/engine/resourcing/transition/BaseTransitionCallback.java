@@ -13,6 +13,9 @@ import java.io.Serializable;
 public abstract class BaseTransitionCallback implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    public void onPrepareExecute(WorkitemTransitionTracker tracker, WorkitemTransition transition) throws Exception {
+    }
+
     public abstract void onExecuted(WorkitemTransitionTracker tracker, WorkitemTransition transition);
 
     public void onFailed(WorkitemTransitionTracker tracker, WorkitemTransition transition) {
