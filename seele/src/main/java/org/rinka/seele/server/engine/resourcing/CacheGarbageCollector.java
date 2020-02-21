@@ -7,6 +7,7 @@ package org.rinka.seele.server.engine.resourcing;
 
 import lombok.extern.slf4j.Slf4j;
 import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
+import org.rinka.seele.server.engine.resourcing.transition.WorkitemTransitionExecutor;
 import org.rinka.seele.server.logging.RDBWorkitemLogger;
 import org.rinka.seele.server.steady.seele.entity.SeeleItemlogEntity;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,9 @@ public class CacheGarbageCollector {
 
     @Autowired
     private RSInteraction interaction;
+
+    @Autowired
+    private WorkitemTransitionExecutor transitionExecutor;
 
     @PostConstruct
     private void postConstruct() {
@@ -56,6 +60,7 @@ public class CacheGarbageCollector {
             }
             for (WorkitemContext workitem : removeSet) {
                 workitem.removeSelfFromCache();
+                transitionExecutor.removeTracker(workitem);
                 log.info(String.format("remove final state workitem[%s] %s (%s)", workitem.getWid(), workitem.getTaskName(), workitem.getState().name()));
             }
             log.info("finish workitem GC: " + removeSet.size());

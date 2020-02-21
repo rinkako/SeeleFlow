@@ -7,11 +7,13 @@ package org.rinka.seele.server.connect.ws.listener;
 import com.corundumstudio.socketio.AckRequest;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.listener.DataListener;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.rinka.seele.server.GDP;
 import org.rinka.seele.server.engine.resourcing.RSInteraction;
 import org.rinka.seele.server.engine.resourcing.context.ResourcingStateType;
 import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
@@ -21,6 +23,9 @@ import org.rinka.seele.server.steady.seele.repository.SeeleWorkitemRepository;
 import org.rinka.seele.server.util.JsonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Class : ParticipantDataListener
@@ -33,6 +38,7 @@ public class ParticipantDataListener implements DataListener<String> {
     @Autowired
     private RSInteraction interaction;
 
+    private static final String MESSAGE_ACK = "ACK";
     private static final String MESSAGE_OUT_OF_MANAGE = "OUT_OF_SERVER_MANAGEMENT";
 
     @Override
@@ -41,7 +47,14 @@ public class ParticipantDataListener implements DataListener<String> {
         ParticipantContext pc = ParticipantPool.getParticipantBySessionId(client.getSessionId().toString());
         if (pc == null) {
             log.warn("request in but Participant context not exist, waiting for metadata");
-            ackSender.sendAckData(MESSAGE_OUT_OF_MANAGE);
+            SeeleRequestMail srMail = new SeeleRequestMail();
+            srMail.setContent(MESSAGE_OUT_OF_MANAGE);
+            try {
+                String jStr = JsonUtil.dumps(srMail);
+                ackSender.sendAckData(jStr);
+            } catch (JsonProcessingException e) {
+                log.error("cannot jsonify string: " + e.getMessage());
+            }
             return;
         }
         log.info(String.format("Mail from participant[%s][%s]: %s", pc.getNamespace(), pc.getDisplayName(), mail.toString()));
@@ -59,6 +72,27 @@ public class ParticipantDataListener implements DataListener<String> {
                 this.interaction.completeWorkitemByParticipant(mail.epochId, workitem, participant);
                 break;
         }
+        // ack
+        SeeleRequestMail srMail = new SeeleRequestMail();
+        srMail.setContent(MESSAGE_ACK);
+        try {
+            String jStr = JsonUtil.dumps(srMail);
+            ackSender.sendAckData(jStr);
+        } catch (JsonProcessingException e) {
+            log.error("cannot jsonify string: " + e.getMessage());
+        }
+    }
+
+    @Data
+    @ToString
+    @EqualsAndHashCode
+    private static class SeeleRequestMail {
+
+        private String seeleId = GDP.SeeleId;
+
+        private String content;
+
+        private String timestamp = ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     }
 
     @Data

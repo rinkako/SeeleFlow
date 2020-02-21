@@ -15,7 +15,9 @@ import java.util.LinkedList;
 
 /**
  * Class : WorkitemTransitionTracker
- * Usage :
+ * Usage : Tracker will perform workitem state transition in a valid transition path,
+ * and will handle the unordered arrival of participant transition requests.
+ * All workitem state transition should be apply here.
  */
 @Slf4j
 @ToString
@@ -33,8 +35,22 @@ public class WorkitemTransitionTracker {
     @Getter
     private LinkedList<WorkitemTransition> incomingEpoch = new LinkedList<>();
 
+    @Getter
     private LinkedList<WorkitemTransition> epochTransitions = new LinkedList<>();
 
+    /**
+     * Request tracker to perform a transition which the workitem from a state to another state.
+     * <p>
+     * Transition may not be performed immediately since it may be a unordered arrival from participant
+     * workitem transition request and will be put into a graph waiting for its predecessor transitions.
+     * <p>
+     * After all predecessor transitions successfully performed, this transition will be performed, and
+     * update the Epoch Watermark to its epoch Id. Notice that if a transition submitted with an epoch
+     * lower than watermark or equals, it will be ignored since it is considered to be a duplicated
+     * request from participants.
+     *
+     * @param transition Transition to perform on binding workitem
+     */
     public synchronized TransitionRequestResult transitionTo(WorkitemTransition transition) throws Exception {
         this.incomingEpoch.addLast(transition);
         if (!WorkitemTransition.isTransitionValid(transition)) {
