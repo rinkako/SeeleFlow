@@ -13,5 +13,7 @@ public enum TransitionRequestResult {
     Invalid,
     Duplicated,
     Submitted,
-    Executed
+    Executed,
+    FinalStateReject,
+    Banned
 }

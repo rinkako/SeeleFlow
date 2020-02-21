@@ -197,8 +197,7 @@ public class WorkitemContext implements Serializable {
         return state == ResourcingStateType.COMPLETED ||
                 state == ResourcingStateType.EXCEPTION ||
                 state == ResourcingStateType.CANCELLED ||
-                state == ResourcingStateType.FORCE_COMPLETED ||
-                state == ResourcingStateType.BAD_ALLOCATED;
+                state == ResourcingStateType.FORCE_COMPLETED;
     }
 
     public static boolean isActiveState(ResourcingStateType state) {
