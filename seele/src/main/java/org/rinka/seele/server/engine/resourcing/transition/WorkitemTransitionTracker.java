@@ -52,7 +52,11 @@ public class WorkitemTransitionTracker {
      * request from participants.
      * <p>
      * Notice that supervisor transition requests will be executed immediately without queuing, especially
-     * the transition with a `FORCE_COMPLETED` target will be performed anyway even a invalid transition.
+     * the transition with a `FORCE_COMPLETED` target will be performed anyway even a invalid transition
+     * unless the workitem is already at final state.
+     * <p>
+     * In the case of the workitem is already at final state, any transition will get a `FinalStateReject`
+     * return and nothing is performed.
      *
      * @param transition Transition to perform on binding workitem
      */
