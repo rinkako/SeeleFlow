@@ -8,6 +8,7 @@ import org.rinka.seele.server.api.form.*;
 import org.rinka.seele.server.api.response.SeeleRestResponse;
 import org.rinka.seele.server.service.internal.ProcedureService;
 import org.rinka.seele.server.service.internal.SupervisorService;
+import org.rinka.seele.server.service.internal.WorkitemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +26,8 @@ public class SupervisorController {
     private SupervisorService supervisorService;
     @Autowired
     private ProcedureService procedureService;
+    @Autowired
+    private WorkitemService workitemService;
 
     @ResponseBody
     @RequestMapping(value = "/register", method = RequestMethod.POST)
@@ -60,7 +63,7 @@ public class SupervisorController {
     @ResponseBody
     @RequestMapping(value = "/workitem/forceComplete", method = RequestMethod.POST)
     public SeeleRestResponse forceComplete(@Valid @RequestBody WidForm body) throws Exception {
-
-        return SeeleRestResponse.ok();
+        Object result = this.workitemService.forceComplete(body.getNamespace(), body.getWid());
+        return SeeleRestResponse.ok(result);
     }
 }

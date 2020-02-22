@@ -75,6 +75,10 @@ public class ParticipantPool {
             return this.namespacedPool.remove(participantContext.getParticipantId());
         }
 
+        public ParticipantContext getParticipant(String participantId) {
+            return this.namespacedPool.get(participantId);
+        }
+
         public Set<ParticipantContext> getParticipants() {
             return new HashSet<>(this.namespacedPool.values());
         }

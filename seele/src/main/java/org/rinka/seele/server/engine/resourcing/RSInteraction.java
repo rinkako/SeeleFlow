@@ -245,15 +245,17 @@ public class RSInteraction {
     }
 
     @Transactional
-    public WorkitemContext forceCompleteWorkitemBySupervisor(CallableSupervisor supervisor, WorkitemContext workitem) throws Exception {
-        log.info(String.format("supervisor[%s] ask for force complete workitem [%s]", supervisor.getSupervisorId(), workitem.getWid()));
+    public WorkitemContext forceCompleteWorkitemBySupervisor(WorkitemContext workitem) throws Exception {
+        log.info(String.format("supervisor ask for force complete workitem [%s]", workitem.getWid()));
         String lastState = workitem.getState().name();
         WorkitemTransition transition = new WorkitemTransition(TransitionCallerType.Supervisor,
                 ResourcingStateType.ANY, ResourcingStateType.FORCE_COMPLETED, -1, new BaseTransitionCallback() {
             @Override
             public void onPrepareExecute(WorkitemTransitionTracker tracker, WorkitemTransition transition) {
                 WorkQueue workQueue = workitem.getQueueReference();
-                workQueue.remove(workitem);
+                if (workQueue != null) {
+                    workQueue.remove(workitem);
+                }
                 workitem.setCompleteTime(Timestamp.from(ZonedDateTime.now().toInstant()));
             }
 

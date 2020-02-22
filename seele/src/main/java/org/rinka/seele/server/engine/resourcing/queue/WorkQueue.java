@@ -5,12 +5,14 @@
  */
 package org.rinka.seele.server.engine.resourcing.queue;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Data;
-import org.rinka.seele.server.engine.resourcing.context.ResourcingStateType;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
-import org.rinka.seele.server.engine.resourcing.transition.WorkitemTransition;
-import org.rinka.seele.server.steady.seele.entity.SeeleWorkitemEntity;
 import org.rinka.seele.server.steady.seele.repository.SeeleWorkitemRepository;
+import org.rinka.seele.server.util.JsonUtil;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -24,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Usage : WorkQueue context is an encapsulation of Workitem Queue in a
  * convenient way for resourcing.
  */
+@Slf4j
 @Data
 public class WorkQueue implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -64,21 +67,7 @@ public class WorkQueue implements Serializable {
      *
      * @param workitem workitem entity.
      */
-    public void addOrUpdate(WorkitemContext workitem) throws Exception {
-//        SeeleWorkitemEntity workitemEntity = workitem.getEntity();
-//        workitemEntity.setQueueId(this.queueId);
-//        switch (this.type) {
-//            case ALLOCATED:
-//                workitem.setState(ResourcingStateType.ALLOCATED);
-//                break;
-//            case ACCEPTED:
-//                workitem.setState(ResourcingStateType.ACCEPTED);
-//                break;
-//            case STARTED:
-//                workitem.setState(ResourcingStateType.RUNNING);
-//                break;
-//        }
-//        workitem.flushSteady();
+    public void addOrUpdate(WorkitemContext workitem) {
         workitem.setQueueReference(this);
         this.workitems.put(workitem.getWid(), workitem);
     }
@@ -89,7 +78,7 @@ public class WorkQueue implements Serializable {
      *
      * @param queue queue to be added
      */
-    public void addFromQueue(WorkQueue queue) throws Exception {
+    public void addFromQueue(WorkQueue queue) {
         for (WorkitemContext w : queue.getWorkitems().values()) {
             this.addOrUpdate(w);
         }
@@ -174,17 +163,17 @@ public class WorkQueue implements Serializable {
     /**
      * Get the specific queue context and store to steady.
      *
-     * @param ownerWorkerId queue owner worker id
+     * @param participantId queue owner participant id
      * @param queueType     queue type enum
      * @return a workqueue context
      */
-    public static WorkQueue of(SeeleWorkitemRepository repository, String namespace, String ownerWorkerId, WorkQueueType queueType) {
+    public static WorkQueue of(SeeleWorkitemRepository repository, String namespace, String participantId, WorkQueueType queueType) {
         WorkQueue workQueue = new WorkQueue();
         workQueue.repository = repository;
-        workQueue.ownerParticipantId = ownerWorkerId;
+        workQueue.ownerParticipantId = participantId;
         workQueue.namespace = namespace;
         workQueue.type = queueType;
-        workQueue.queueId = String.format("%s&%s&%s", namespace, ownerWorkerId, queueType.name());
+        workQueue.queueId = WorkQueue.generateQueueId(namespace, participantId, queueType);
         return workQueue;
     }
 
@@ -196,4 +185,44 @@ public class WorkQueue implements Serializable {
     private static void syncSteady() {
         // TODO
     }
+
+    public static String generateQueueId(String namespace, String participantId, WorkQueueType queueType) {
+        Map<String, String> map = new HashMap<>();
+        map.put("ns", namespace);
+        map.put("pid", participantId);
+        map.put("qt", queueType.name());
+        try {
+            return JsonUtil.dumps(map);
+        } catch (JsonProcessingException e) {
+            log.error("cannot dump queue id: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public static QueueMetaHint parseQueueId(String queueId) {
+        QueueMetaHint hint = new QueueMetaHint();
+        try {
+            Map result = JsonUtil.parse(queueId, Map.class);
+            hint.setNamespace(result.get("ns").toString());
+            hint.setParticipantId(result.get("pid").toString());
+            hint.setQueueType(Enum.valueOf(WorkQueueType.class, result.get("qt").toString()));
+            return hint;
+        } catch (JsonProcessingException e) {
+            log.error("cannot parse queue id: " + e.getMessage());
+            return null;
+        }
+    }
+
+    @Data
+    @ToString
+    @EqualsAndHashCode
+    public static class QueueMetaHint {
+
+        private String namespace;
+
+        private String participantId;
+
+        private WorkQueueType queueType;
+    }
+
 }

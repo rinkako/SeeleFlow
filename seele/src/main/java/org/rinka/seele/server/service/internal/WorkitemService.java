@@ -18,5 +18,5 @@ public interface WorkitemService {
      * @param namespace workitem namespace
      * @param wid       workitem unique id
      */
-    WorkitemContext forceComplete(String namespace, String wid);
+    WorkitemContext forceComplete(String namespace, String wid) throws Exception;
 }

@@ -5,7 +5,9 @@
  */
 package org.rinka.seele.server.service.internal;
 
+import org.rinka.seele.server.engine.resourcing.RSInteraction;
 import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Component
 public class WorkitemServiceImpl implements WorkitemService {
+
+    @Autowired
+    private RSInteraction interaction;
 
     /**
      * Force a workitem to complete by supervisor.
@@ -27,8 +32,9 @@ public class WorkitemServiceImpl implements WorkitemService {
      */
     @Transactional
     @Override
-    public WorkitemContext forceComplete(String namespace, String wid) {
-
+    public WorkitemContext forceComplete(String namespace, String wid) throws Exception {
+        WorkitemContext workitem = WorkitemContext.loadByNamespaceAndWid(namespace, wid);
+        this.interaction.forceCompleteWorkitemBySupervisor(workitem);
         return null;
     }
 }

@@ -12,6 +12,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.rinka.seele.server.engine.resourcing.participant.ParticipantContext;
+import org.rinka.seele.server.engine.resourcing.participant.ParticipantPool;
 import org.rinka.seele.server.engine.resourcing.principle.Principle;
 import org.rinka.seele.server.engine.resourcing.queue.WorkQueue;
 import org.rinka.seele.server.logging.RDBWorkitemLogger;
@@ -301,6 +303,23 @@ public class WorkitemContext implements Serializable {
             this.args = JsonUtil.parse(swe.getArguments(), Map.class);
         } catch (JsonProcessingException e) {
             log.warn("cannot parse args: " + e.getMessage());
+        }
+        String queueId = swe.getQueueId();
+        if (queueId != null) {
+            WorkQueue.QueueMetaHint queueMeta = WorkQueue.parseQueueId(queueId);
+            if (queueMeta != null) {
+                ParticipantContext participant = ParticipantPool.namespace(queueMeta.getNamespace())
+                        .getParticipant(queueMeta.getParticipantId());
+                if (participant == null) {
+                    log.debug("participant context not exist, transition will perform without queue update: " + this.getWid());
+                } else {
+                    try {
+                        participant.getQueueContainer().addToQueue(this, queueMeta.getQueueType());
+                    } catch (Exception qe) {
+                        log.error("cannot add item to queue: " + qe.getMessage());
+                    }
+                }
+            }
         }
         this.taskName = swe.getTaskName();
         this.state = Enum.valueOf(ResourcingStateType.class, swe.getState());
