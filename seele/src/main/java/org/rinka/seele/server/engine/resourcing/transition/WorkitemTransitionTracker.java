@@ -36,11 +36,12 @@ public class WorkitemTransitionTracker {
     private LinkedList<WorkitemTransition> epochTransitions = new LinkedList<>();
 
     /**
-     * Request tracker to perform a transition which guides the workitem to transition from a state to
+     * Request tracker to perform a transition which guides the workitem to transit from a state to
      * another state if the transition is valid.
      * <p>
-     * Transition may not be performed immediately since it may be a unordered arrival from participant
-     * workitem transition request and will be put into a graph waiting for its predecessor transitions.
+     * Transition may not be performed immediately since it may be an unordered arrival of participant
+     * request of workitem transition and will be put into finite state graph waiting for its predecessor
+     * transitions arriving.
      * <p>
      * After all predecessor transitions successfully performed, this transition will be performed, and
      * update the Epoch Watermark to its epoch Id. Notice that if a transition submitted with an epoch

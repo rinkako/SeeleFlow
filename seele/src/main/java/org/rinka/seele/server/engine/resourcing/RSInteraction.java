@@ -200,13 +200,17 @@ public class RSInteraction {
     }
 
     @Transactional
-    public WorkitemContext completeWorkitemByParticipant(int epochId, WorkitemContext workitem, ParticipantContext participant) throws Exception {
+    public WorkitemContext completeOrExceptionWorkitemByParticipant(int epochId, WorkitemContext workitem, ParticipantContext participant, boolean hasException) throws Exception {
+        if (hasException) {
+            log.warn("Workitem reported exception end: " + workitem.getWid());
+        }
         Principle.DispatchType dispatchType = workitem.getPrinciple().getDispatchType();
         String lastState = workitem.getState().name();
+        ResourcingStateType nextState = hasException ? ResourcingStateType.EXCEPTION : ResourcingStateType.COMPLETED;
         switch (dispatchType) {
             case ALLOCATE:
                 WorkitemTransition transition = new WorkitemTransition(TransitionCallerType.Participant,
-                        ResourcingStateType.RUNNING, ResourcingStateType.COMPLETED, epochId, new BaseTransitionCallback() {
+                        ResourcingStateType.RUNNING, nextState, epochId, new BaseTransitionCallback() {
 
                     @Override
                     public void onPrepareExecute(WorkitemTransitionTracker tracker, WorkitemTransition transition) {
@@ -222,11 +226,11 @@ public class RSInteraction {
                             try {
                                 flushLogItem(workitem);
                             } catch (Exception e) {
-                                log.error("flush log for workitem fault, reset flush flag: " + e.getMessage());
+                                log.error("Flush log for workitem fault, reset flush flag: " + e.getMessage());
                                 workitem.markLogNotFlush();
                             }
                         } else {
-                            log.info("workitem completed, wait for cache GC to flush log");
+                            log.info(String.format("Workitem %s, wait for cache GC to flush log", nextState.name()));
                         }
                         // notify supervisor
                         notifySupervisorsWorkitemTransition(workitem.getRequestId(), workitem.getNamespace(), workitem, lastState, null);
@@ -302,7 +306,7 @@ public class RSInteraction {
     public synchronized void flushLogItem(WorkitemContext workitem) {
         if (workitem.getLogContainer() instanceof RDBWorkitemLogger) {
             RDBWorkitemLogger rdbLogContainer = (RDBWorkitemLogger) workitem.getLogContainer();
-            log.info("using embedded logging, begin flush log with items: " + rdbLogContainer.size());
+            log.info("Using embedded logging, begin flush log with items: " + rdbLogContainer.size());
             String logContent = rdbLogContainer.dumpMultilineString();
             SeeleItemlogEntity logItem = new SeeleItemlogEntity();
             logItem.setWid(workitem.getWid());
@@ -310,7 +314,7 @@ public class RSInteraction {
             logItem.setContent(logContent);
             this.itemlogRepository.save(logItem);
             rdbLogContainer.clear();
-            log.info("workitem log flushed");
+            log.info("Workitem log flushed");
         }
     }
 

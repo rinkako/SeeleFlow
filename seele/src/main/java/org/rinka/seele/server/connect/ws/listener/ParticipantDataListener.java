@@ -19,7 +19,6 @@ import org.rinka.seele.server.engine.resourcing.context.ResourcingStateType;
 import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
 import org.rinka.seele.server.engine.resourcing.participant.ParticipantContext;
 import org.rinka.seele.server.engine.resourcing.participant.ParticipantPool;
-import org.rinka.seele.server.steady.seele.repository.SeeleWorkitemRepository;
 import org.rinka.seele.server.util.JsonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -69,7 +68,10 @@ public class ParticipantDataListener implements DataListener<String> {
                 this.interaction.startWorkitemByParticipant(mail.epochId, workitem, participant);
                 break;
             case COMPLETED:
-                this.interaction.completeWorkitemByParticipant(mail.epochId, workitem, participant);
+                this.interaction.completeOrExceptionWorkitemByParticipant(mail.epochId, workitem, participant, false);
+                break;
+            case EXCEPTION:
+                this.interaction.completeOrExceptionWorkitemByParticipant(mail.epochId, workitem, participant, true);
                 break;
         }
         // ack

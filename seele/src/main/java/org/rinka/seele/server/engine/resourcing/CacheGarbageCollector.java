@@ -74,7 +74,7 @@ public class CacheGarbageCollector {
                 if (gcTime == null) {
                     workitem.setMarkAsGarbageTime(Timestamp.from(ZonedDateTime.now().toInstant()));
                     markGarbageCount++;
-                    log.info(String.format("marked final state workitem[%s] %s (%s) to be garbage, it will be collected after %sms",
+                    log.info(String.format("Marked final state workitem[%s] %s (%s) to be garbage, it will be collected after %sms",
                             workitem.getWid(), workitem.getTaskName(), workitem.getState().name(), CacheGarbageCollector.GC_WAIT_TIME));
                     continue;
                 }
@@ -82,12 +82,12 @@ public class CacheGarbageCollector {
                     workitem.removeSelfFromCache();
                     transitionExecutor.removeTracker(workitem);
                     collectGarbageCount++;
-                    log.info(String.format("remove final state workitem[%s] %s (%s)", workitem.getWid(), workitem.getTaskName(), workitem.getState().name()));
+                    log.info(String.format("Remove final state workitem[%s] %s (%s)", workitem.getWid(), workitem.getTaskName(), workitem.getState().name()));
                 }
             }
             log.info(String.format("GC report: Collect[%s] Mark[%s] LogFlush[%s] Caching[%s]", collectGarbageCount, markGarbageCount, flushLogCount, WorkitemContext.WorkitemPool.size()));
         } catch (Exception ee) {
-            log.error("workitem gc exception: " + ee.getMessage());
+            log.error("Workitem gc exception: " + ee.getMessage());
         }
     }
 
