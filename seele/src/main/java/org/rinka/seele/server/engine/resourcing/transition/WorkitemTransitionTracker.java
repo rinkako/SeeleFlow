@@ -72,7 +72,13 @@ public class WorkitemTransitionTracker {
                     sFlag = this.microStepTransition(transition, false);
                     break;
             }
-            return sFlag ? TransitionRequestResult.Executed : TransitionRequestResult.Invalid;
+            if (sFlag) {
+                transition.setFinished(true);
+                transition.onExecuted(this);
+                return TransitionRequestResult.Executed;
+            } else {
+                return TransitionRequestResult.Invalid;
+            }
         } else {
             this.incomingEpoch.addLast(transition);
             if (!WorkitemTransition.isTransitionValid(transition)) {

@@ -73,4 +73,11 @@ public class SupervisorController {
         Object result = this.workitemService.forceCancel(body.getNamespace(), body.getWid());
         return SeeleRestResponse.ok(result);
     }
+
+    @ResponseBody
+    @RequestMapping(value = "/workitem/reallocate", method = RequestMethod.POST)
+    public SeeleRestResponse reallocate(@Valid @RequestBody WidForm body) throws Exception {
+        Object result = this.workitemService.reallocate(body.getNamespace(), body.getWid());
+        return SeeleRestResponse.ok(result);
+    }
 }

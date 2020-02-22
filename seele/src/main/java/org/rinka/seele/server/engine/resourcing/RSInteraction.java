@@ -82,11 +82,19 @@ public class RSInteraction {
     public WorkitemContext supervisorSubmitTask(TaskContext context) throws Exception {
         // generate workitem
         WorkitemContext workitem = this.createWorkitemTransactional(context);
+        return allocateWorkitem(context, workitem, false);
+    }
+
+    public WorkitemContext reallocateBySupervisor(WorkitemContext workitem) throws Exception {
+        TaskContext task = workitem.getTaskTemplate();
+        return allocateWorkitem(task, workitem, true);
+    }
+
+    private WorkitemContext allocateWorkitem(TaskContext context, WorkitemContext workitem, boolean isReallocate) throws Exception {
         Principle principle = context.getPrinciple();
-        String skillRequired = workitem.getSkill();
         // calculate candidate set
         Set<ParticipantContext> candidates;
-        if (skillRequired == null) {
+        if (workitem.getSkill() == null) {
             log.info("no any skill requirement, candidate set will be all participants");
             candidates = ParticipantPool
                     .namespace(context.getNamespace())
@@ -94,7 +102,7 @@ public class RSInteraction {
         } else {
             candidates = ParticipantPool
                     .namespace(context.getNamespace())
-                    .getSkilledParticipants(skillRequired);
+                    .getSkilledParticipants(workitem.getSkill());
         }
         // bad allocation
         if (candidates.size() == 0) {
@@ -109,14 +117,30 @@ public class RSInteraction {
                     WorkQueueContainer container = chosenOne.getQueueContainer();
                     container.setRepository(this.workitemRepository);
                     container.addToQueue(workitem, WorkQueueType.ALLOCATED);
-                    WorkitemTransition transition = new WorkitemTransition(TransitionCallerType.Supervisor, ResourcingStateType.CREATED, ResourcingStateType.ALLOCATED, 0);
-                    this.transitionExecutor.submit(workitem, transition);
-                    int handlingCount = chosenOne.getHandlingWorkitemCount().incrementAndGet();
-                    this.participantTelepathy.NotifyWorkitemAllocated(chosenOne, workitem);
-                    log.info(String.format("Supervisor `%s`(NS:%s) submitted raw task [%s] with %s, " +
-                                    "Seele allocated it to participant [%s], with running workitem count: %s",
-                            context.getRawEntity().getSubmitter(), context.getNamespace(), context.getRawEntity().getName(),
-                            context.getPrinciple(), chosenOne.getDisplayName(), handlingCount));
+                    if (isReallocate) {
+                        WorkitemTransition transition = new WorkitemTransition(TransitionCallerType.Supervisor,
+                                ResourcingStateType.BAD_ALLOCATED, ResourcingStateType.ALLOCATED, 0, new BaseTransitionCallback() {
+                            @Override
+                            public void onExecuted(WorkitemTransitionTracker tracker, WorkitemTransition transition) {
+                                int handlingCount = chosenOne.getHandlingWorkitemCount().incrementAndGet();
+                                participantTelepathy.NotifyWorkitemAllocated(chosenOne, workitem);
+                                log.info(String.format("Workitem %s(%s) is reallocated to participant [%s], with running workitem count: %s",
+                                        workitem.getWid(), workitem.getTaskName(), chosenOne.getDisplayName(), handlingCount));
+                            }
+                        });
+                        this.transitionExecutor.submit(workitem, transition);
+                    } else {
+                        WorkitemTransition transition = new WorkitemTransition(TransitionCallerType.Supervisor,
+                                ResourcingStateType.CREATED, ResourcingStateType.ALLOCATED, 0);
+                        this.transitionExecutor.submit(workitem, transition);
+                        int handlingCount = chosenOne.getHandlingWorkitemCount().incrementAndGet();
+                        this.participantTelepathy.NotifyWorkitemAllocated(chosenOne, workitem);
+                        log.info(String.format("Supervisor `%s`(NS:%s) submitted raw task [%s] with %s, " +
+                                        "Seele allocated it to participant [%s], with running workitem count: %s",
+                                context.getRawEntity().getSubmitter(), context.getNamespace(), context.getRawEntity().getName(),
+                                context.getPrinciple(), chosenOne.getDisplayName(), handlingCount));
+                    }
+
                     break;
                 case OFFER:
                     throw new Exception("NotImplemented");

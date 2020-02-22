@@ -32,4 +32,11 @@ public interface WorkitemService {
      */
     TransitionRequestResult forceCancel(String namespace, String wid) throws Exception;
 
+    /**
+     * Reallocate a workitem at BAD_ALLOCATED state to candidate participants.
+     *
+     * @param namespace workitem namespace
+     * @param wid       workitem unique id
+     */
+    WorkitemContext reallocate(String namespace, String wid) throws Exception;
 }

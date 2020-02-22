@@ -52,4 +52,16 @@ public class WorkitemServiceImpl implements WorkitemService {
         WorkitemContext workitem = WorkitemContext.loadByNamespaceAndWid(namespace, wid);
         return this.interaction.forceCompleteOrCancelWorkitemBySupervisor(workitem, true);
     }
+
+    /**
+     * Reallocate a workitem at BAD_ALLOCATED state to candidate participants.
+     *
+     * @param namespace workitem namespace
+     * @param wid       workitem unique id
+     */
+    @Override
+    public WorkitemContext reallocate(String namespace, String wid) throws Exception {
+        WorkitemContext workitem = WorkitemContext.loadByNamespaceAndWid(namespace, wid);
+        return this.interaction.reallocateBySupervisor(workitem);
+    }
 }

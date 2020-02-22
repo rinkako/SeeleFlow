@@ -17,3 +17,13 @@ Content-Type: application/json
 }
 
 ###
+
+POST http://localhost:11004/api/rs/supervisor/workitem/reallocate
+Content-Type: application/json
+
+{
+  "namespace": "mars_cluster_dev",
+  "wid": "eb78d2d3-7b25-4039-9d0f-155a85d44b8d"
+}
+
+###
