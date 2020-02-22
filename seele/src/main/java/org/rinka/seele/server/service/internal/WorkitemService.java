@@ -6,6 +6,7 @@
 package org.rinka.seele.server.service.internal;
 
 import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
+import org.rinka.seele.server.engine.resourcing.transition.TransitionRequestResult;
 
 public interface WorkitemService {
 
@@ -18,5 +19,17 @@ public interface WorkitemService {
      * @param namespace workitem namespace
      * @param wid       workitem unique id
      */
-    WorkitemContext forceComplete(String namespace, String wid) throws Exception;
+    TransitionRequestResult forceComplete(String namespace, String wid) throws Exception;
+
+    /**
+     * Force a workitem to be cancelled by supervisor.
+     * <p>
+     * Cancelled is a final state of workitem, means it will ignore
+     * any transition request coming later.
+     *
+     * @param namespace workitem namespace
+     * @param wid       workitem unique id
+     */
+    TransitionRequestResult forceCancel(String namespace, String wid) throws Exception;
+
 }

@@ -245,11 +245,12 @@ public class RSInteraction {
     }
 
     @Transactional
-    public WorkitemContext forceCompleteWorkitemBySupervisor(WorkitemContext workitem) throws Exception {
+    public TransitionRequestResult forceCompleteOrCancelWorkitemBySupervisor(WorkitemContext workitem, boolean isCancel) throws Exception {
         log.info(String.format("supervisor ask for force complete workitem [%s]", workitem.getWid()));
         String lastState = workitem.getState().name();
+        ResourcingStateType target = isCancel ? ResourcingStateType.CANCELLED : ResourcingStateType.FORCE_COMPLETED;
         WorkitemTransition transition = new WorkitemTransition(TransitionCallerType.Supervisor,
-                ResourcingStateType.ANY, ResourcingStateType.FORCE_COMPLETED, -1, new BaseTransitionCallback() {
+                ResourcingStateType.ANY, target, -1, new BaseTransitionCallback() {
             @Override
             public void onPrepareExecute(WorkitemTransitionTracker tracker, WorkitemTransition transition) {
                 WorkQueue workQueue = workitem.getQueueReference();
@@ -265,11 +266,10 @@ public class RSInteraction {
                 notifySupervisorsWorkitemTransition(workitem.getRequestId(), workitem.getNamespace(), workitem, lastState, null);
                 // complete the task
                 workitem.getTaskTemplate().markAsFinish();
-                log.info(String.format("Forced complete workitem: %s(%s)", workitem.getWid(), workitem.getTaskName()));
+                log.info(String.format("%s workitem: %s(%s)", target.name(), workitem.getWid(), workitem.getTaskName()));
             }
         });
-        this.transitionExecutor.submit(workitem, transition);
-        return workitem;
+        return this.transitionExecutor.submit(workitem, transition);;
     }
 
     private void notifySupervisorsWorkitemTransition(String requestId, String namespace, WorkitemContext workitem, String prevStateName, Object payload) {

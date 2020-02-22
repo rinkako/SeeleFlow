@@ -92,7 +92,7 @@ public class WorkitemTransition implements Serializable {
 
     public static boolean isTransitionable(WorkitemContext workitem, WorkitemTransition transition) {
         if (transition.getFrom() == ResourcingStateType.ANY) {
-            return true;
+            return WorkitemTransition.isTransitionValid(workitem.getState(), transition.target);
         } else {
             return workitem.getState().equals(transition.getFrom());
         }

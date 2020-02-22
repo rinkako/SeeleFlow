@@ -52,7 +52,7 @@ public enum ResourcingStateType {
     COMPLETED,
 
     /**
-     * Any state
+     * Any state above
      */
     ANY
 }

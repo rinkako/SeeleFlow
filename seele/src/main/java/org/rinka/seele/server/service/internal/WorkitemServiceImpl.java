@@ -7,6 +7,7 @@ package org.rinka.seele.server.service.internal;
 
 import org.rinka.seele.server.engine.resourcing.RSInteraction;
 import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
+import org.rinka.seele.server.engine.resourcing.transition.TransitionRequestResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,9 +33,23 @@ public class WorkitemServiceImpl implements WorkitemService {
      */
     @Transactional
     @Override
-    public WorkitemContext forceComplete(String namespace, String wid) throws Exception {
+    public TransitionRequestResult forceComplete(String namespace, String wid) throws Exception {
         WorkitemContext workitem = WorkitemContext.loadByNamespaceAndWid(namespace, wid);
-        this.interaction.forceCompleteWorkitemBySupervisor(workitem);
-        return null;
+        return this.interaction.forceCompleteOrCancelWorkitemBySupervisor(workitem, false);
+    }
+
+    /**
+     * Force a workitem to be cancelled by supervisor.
+     * <p>
+     * Cancelled is a final state of workitem, means it will ignore
+     * any transition request coming later.
+     *
+     * @param namespace workitem namespace
+     * @param wid       workitem unique id
+     */
+    @Override
+    public TransitionRequestResult forceCancel(String namespace, String wid) throws Exception {
+        WorkitemContext workitem = WorkitemContext.loadByNamespaceAndWid(namespace, wid);
+        return this.interaction.forceCompleteOrCancelWorkitemBySupervisor(workitem, true);
     }
 }
