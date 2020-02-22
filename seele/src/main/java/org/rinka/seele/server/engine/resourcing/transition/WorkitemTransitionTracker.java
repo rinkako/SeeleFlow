@@ -61,16 +61,17 @@ public class WorkitemTransitionTracker {
             return TransitionRequestResult.FinalStateReject;
         }
         if (transition.getCallerType() == TransitionCallerType.Supervisor) {
+            boolean sFlag = false;
             switch (transition.getTarget()) {
                 case FORCE_COMPLETED:
-                    this.microStepTransition(transition, true);
+                    sFlag = this.microStepTransition(transition, true);
                     break;
                 case CANCELLED:
                 case ALLOCATED:
-                    this.microStepTransition(transition, false);
+                    sFlag = this.microStepTransition(transition, false);
                     break;
             }
-            return TransitionRequestResult.Executed;
+            return sFlag ? TransitionRequestResult.Executed : TransitionRequestResult.Invalid;
         } else {
             this.incomingEpoch.addLast(transition);
             if (!WorkitemTransition.isTransitionValid(transition)) {
@@ -132,7 +133,7 @@ public class WorkitemTransitionTracker {
             this.workitem.flushSteady();
             return true;
         } else {
-            log.warn("unordered transition arrival, waiting for predecessor");
+            log.warn("transition cannot perform, is unordered transition arrival waiting for predecessor?");
             return false;
         }
     }

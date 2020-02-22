@@ -7,3 +7,13 @@ Content-Type: application/json
 }
 
 ###
+
+POST http://localhost:11004/api/rs/supervisor/workitem/cancel
+Content-Type: application/json
+
+{
+  "namespace": "mars_cluster_dev",
+  "wid": "a0c29ec5-5c0f-4adb-9452-708f4753dbfb"
+}
+
+###

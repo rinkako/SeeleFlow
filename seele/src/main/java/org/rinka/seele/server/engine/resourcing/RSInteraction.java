@@ -269,7 +269,7 @@ public class RSInteraction {
                 log.info(String.format("%s workitem: %s(%s)", target.name(), workitem.getWid(), workitem.getTaskName()));
             }
         });
-        return this.transitionExecutor.submit(workitem, transition);;
+        return this.transitionExecutor.submit(workitem, transition);
     }
 
     private void notifySupervisorsWorkitemTransition(String requestId, String namespace, WorkitemContext workitem, String prevStateName, Object payload) {
