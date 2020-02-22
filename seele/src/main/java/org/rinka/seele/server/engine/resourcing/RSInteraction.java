@@ -20,6 +20,7 @@ import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
 import org.rinka.seele.server.engine.resourcing.participant.ParticipantContext;
 import org.rinka.seele.server.engine.resourcing.participant.ParticipantPool;
 import org.rinka.seele.server.engine.resourcing.principle.Principle;
+import org.rinka.seele.server.engine.resourcing.queue.WorkQueue;
 import org.rinka.seele.server.engine.resourcing.queue.WorkQueueContainer;
 import org.rinka.seele.server.engine.resourcing.queue.WorkQueueType;
 import org.rinka.seele.server.engine.resourcing.transition.*;
@@ -244,19 +245,29 @@ public class RSInteraction {
     }
 
     @Transactional
-    public WorkitemContext forceCompleteWorkitemBySupervisor(CallableSupervisor supervisor, WorkitemContext workitem) {
-//        workitem.SyncLock.lock();
-//        try {
-//            if (workitem.isFinalState()) {
-//                log.warn(String.format("supervisor[%s] request to force complete workitem at final state: %s",
-//                        supervisor.getSupervisorId(), workitem.getWid()));
-//                return workitem;
-//            }
-//            workitem.setState(ResourcingStateType.FORCE_COMPLETED);
-//        } finally {
-//            workitem.SyncLock.unlock();
-//        }
-        return null;
+    public WorkitemContext forceCompleteWorkitemBySupervisor(CallableSupervisor supervisor, WorkitemContext workitem) throws Exception {
+        log.info(String.format("supervisor[%s] ask for force complete workitem [%s]", supervisor.getSupervisorId(), workitem.getWid()));
+        String lastState = workitem.getState().name();
+        WorkitemTransition transition = new WorkitemTransition(TransitionCallerType.Supervisor,
+                ResourcingStateType.ANY, ResourcingStateType.FORCE_COMPLETED, -1, new BaseTransitionCallback() {
+            @Override
+            public void onPrepareExecute(WorkitemTransitionTracker tracker, WorkitemTransition transition) {
+                WorkQueue workQueue = workitem.getQueueReference();
+                workQueue.remove(workitem);
+                workitem.setCompleteTime(Timestamp.from(ZonedDateTime.now().toInstant()));
+            }
+
+            @Override
+            public void onExecuted(WorkitemTransitionTracker tracker, WorkitemTransition transition) {
+                // notify supervisor
+                notifySupervisorsWorkitemTransition(workitem.getRequestId(), workitem.getNamespace(), workitem, lastState, null);
+                // complete the task
+                workitem.getTaskTemplate().markAsFinish();
+                log.info(String.format("Forced complete workitem: %s(%s)", workitem.getWid(), workitem.getTaskName()));
+            }
+        });
+        this.transitionExecutor.submit(workitem, transition);
+        return workitem;
     }
 
     private void notifySupervisorsWorkitemTransition(String requestId, String namespace, WorkitemContext workitem, String prevStateName, Object payload) {

@@ -16,6 +16,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.sql.Timestamp;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -28,6 +30,8 @@ import java.util.Set;
 @Component
 @EnableScheduling
 public class CacheGarbageCollector {
+
+    private static final long GC_WAIT_TIME = 120_000L;
 
     @Autowired
     private RSInteraction interaction;
@@ -43,27 +47,45 @@ public class CacheGarbageCollector {
     @Scheduled(initialDelay = 60_000, fixedDelay = 30_000)
     private void workitemCacheCollect() {
         log.info("begin workitem cache GC");
+        int markGarbageCount = 0, collectGarbageCount = 0, flushLogCount = 0;
+        long currentTs = System.currentTimeMillis();
         try {
             Collection<WorkitemContext> caches = WorkitemContext.WorkitemPool.values();
             Set<WorkitemContext> removeSet = new HashSet<>();
+            // flush log
             for (WorkitemContext workitem : caches) {
-                if (workitem.isLogArrived() && workitem.isFinalState() && !workitem.isLogFlushed()) {
-                    workitem.markLogAlreadyFlushed();
-                    try {
-                        this.interaction.flushLogItem(workitem);
-                        removeSet.add(workitem);
-                    } catch (Exception ee) {
-                        log.error("flush log for workitem fault, reset flush flag: " + ee.getMessage());
-                        workitem.markLogNotFlush();
+                if (workitem.isLogArrived() && workitem.isFinalState()) {
+                    removeSet.add(workitem);
+                    if (!workitem.isLogFlushed()) {
+                        workitem.markLogAlreadyFlushed();
+                        try {
+                            this.interaction.flushLogItem(workitem);
+                            flushLogCount++;
+                        } catch (Exception ee) {
+                            log.error("flush log for workitem fault, reset flush flag: " + ee.getMessage());
+                            workitem.markLogNotFlush();
+                        }
                     }
                 }
             }
+            // remove cache
             for (WorkitemContext workitem : removeSet) {
-                workitem.removeSelfFromCache();
-                transitionExecutor.removeTracker(workitem);
-                log.info(String.format("remove final state workitem[%s] %s (%s)", workitem.getWid(), workitem.getTaskName(), workitem.getState().name()));
+                Timestamp gcTime = workitem.getMarkAsGarbageTime();
+                if (gcTime == null) {
+                    workitem.setMarkAsGarbageTime(Timestamp.from(ZonedDateTime.now().toInstant()));
+                    markGarbageCount++;
+                    log.info(String.format("marked final state workitem[%s] %s (%s) to be garbage, it will be collected after %sms",
+                            workitem.getWid(), workitem.getTaskName(), workitem.getState().name(), CacheGarbageCollector.GC_WAIT_TIME));
+                    continue;
+                }
+                if (currentTs - gcTime.getTime() > CacheGarbageCollector.GC_WAIT_TIME) {
+                    workitem.removeSelfFromCache();
+                    transitionExecutor.removeTracker(workitem);
+                    collectGarbageCount++;
+                    log.info(String.format("remove final state workitem[%s] %s (%s)", workitem.getWid(), workitem.getTaskName(), workitem.getState().name()));
+                }
             }
-            log.info("finish workitem GC: " + removeSet.size());
+            log.info(String.format("GC report: Collect[%s] Mark[%s] LogFlush[%s] Caching[%s]", collectGarbageCount, markGarbageCount, flushLogCount, WorkitemContext.WorkitemPool.size()));
         } catch (Exception ee) {
             log.error("workitem gc exception: " + ee.getMessage());
         }

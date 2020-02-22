@@ -15,7 +15,7 @@ import java.util.*;
 
 /**
  * Class : WorkitemTransition
- * Usage :
+ * Usage : Workitem state transition action descriptor
  */
 @ToString(exclude = {"callback"})
 @EqualsAndHashCode
@@ -91,7 +91,11 @@ public class WorkitemTransition implements Serializable {
     }
 
     public static boolean isTransitionable(WorkitemContext workitem, WorkitemTransition transition) {
-        return workitem.getState().equals(transition.getFrom());
+        if (transition.getFrom() == ResourcingStateType.ANY) {
+            return true;
+        } else {
+            return workitem.getState().equals(transition.getFrom());
+        }
     }
 
     public static boolean isTransitionValid(WorkitemTransition transition) {

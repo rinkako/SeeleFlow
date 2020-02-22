@@ -49,5 +49,10 @@ public enum ResourcingStateType {
     /**
      * Workitem completed normally
      */
-    COMPLETED
+    COMPLETED,
+
+    /**
+     * Any state
+     */
+    ANY
 }

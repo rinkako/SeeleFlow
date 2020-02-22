@@ -93,6 +93,11 @@ public class WorkitemContext implements Serializable {
     @Setter
     private Timestamp completeTime;
 
+    @Getter
+    @Setter
+    @JsonIgnore
+    private Timestamp markAsGarbageTime;
+
     @JsonIgnore
     @Getter
     private TaskContext taskTemplate;
