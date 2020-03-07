@@ -95,6 +95,11 @@ public class ParticipantContext extends RSContext {
     private Object lastBeat;
 
     /**
+     * Last heartbeat package server ts
+     */
+    private Long lastBeatTimestamp;
+
+    /**
      * Add a collection of skill to this participant.
      *
      * @param skills a List contains skill descriptors

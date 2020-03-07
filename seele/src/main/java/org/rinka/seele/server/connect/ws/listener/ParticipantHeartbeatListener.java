@@ -37,6 +37,7 @@ public class ParticipantHeartbeatListener implements DataListener<String> {
         ParticipantContext participant = ParticipantPool.getParticipantBySessionId(client.getSessionId().toString());
         if (participant != null) {
             participant.setLastBeat(data);
+            participant.setLastBeatTimestamp(System.currentTimeMillis());
         } else {
             log.warn("participant meta arrive but never register");
         }
