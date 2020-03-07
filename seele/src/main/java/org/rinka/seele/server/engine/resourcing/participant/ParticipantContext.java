@@ -90,6 +90,11 @@ public class ParticipantContext extends RSContext {
     private ParticipantReentrantType reentrantType;
 
     /**
+     * Last heartbeat package from participant
+     */
+    private Object lastBeat;
+
+    /**
      * Add a collection of skill to this participant.
      *
      * @param skills a List contains skill descriptors

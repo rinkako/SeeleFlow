@@ -23,4 +23,6 @@ public interface SupervisorService {
     boolean clearNamespace(String namespace);
 
     CallableSupervisor get(String namespace);
+
+    List<SupervisorServiceImpl.ParticipantSummary> listParticipantsInNamespace(String namespace);
 }

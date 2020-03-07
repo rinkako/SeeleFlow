@@ -6,6 +6,7 @@ package org.rinka.seele.server.connect.ws;
 
 import com.corundumstudio.socketio.SocketIOClient;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.rinka.seele.server.GDP;
 import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
 import org.rinka.seele.server.engine.resourcing.participant.ParticipantContext;
@@ -20,6 +21,7 @@ import java.util.Map;
  * Class : ParticipantTelepathy
  * Usage :
  */
+@Slf4j
 @Component
 public class ParticipantTelepathy {
 
@@ -34,7 +36,11 @@ public class ParticipantTelepathy {
         mail.setRequestId(workitem.getRequestId());
         mail.setArgs(workitem.getArgs());
         SocketIOClient participantSG = ParticipantSocketPool.get(workitem.getNamespace(), participant.getParticipantId());
-        participantSG.sendEvent(SeeleSocketIOServer.EVENT_RSEvent, mail);
+        if (participantSG == null) {
+            log.error("retrieve participant socket but null, did worker reconnected with new session id?");
+        } else {
+            participantSG.sendEvent(SeeleSocketIOServer.EVENT_RSEvent, mail);
+        }
     }
 
     @Data

@@ -80,4 +80,11 @@ public class SupervisorController {
         Object result = this.workitemService.reallocate(body.getNamespace(), body.getWid());
         return SeeleRestResponse.ok(result);
     }
+
+    @ResponseBody
+    @RequestMapping(value = "/list_participants", method = RequestMethod.POST)
+    public SeeleRestResponse listParticipants(@Valid @RequestBody NamespaceForm body) throws Exception {
+        Object result = this.supervisorService.listParticipantsInNamespace(body.getNamespace());
+        return SeeleRestResponse.ok(result);
+    }
 }

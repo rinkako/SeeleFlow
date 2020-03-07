@@ -10,6 +10,8 @@ import com.corundumstudio.socketio.listener.DataListener;
 import lombok.extern.slf4j.Slf4j;
 import org.rinka.seele.server.GDP;
 import org.rinka.seele.server.connect.ws.SeeleSocketIOServer;
+import org.rinka.seele.server.engine.resourcing.participant.ParticipantContext;
+import org.rinka.seele.server.engine.resourcing.participant.ParticipantPool;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -32,6 +34,12 @@ public class ParticipantHeartbeatListener implements DataListener<String> {
     @Override
     public void onData(SocketIOClient client, String data, AckRequest ackSender) throws Exception {
         log.info(String.format("Received heartbeat from participant agent: %s", client.getSessionId()));
+        ParticipantContext participant = ParticipantPool.getParticipantBySessionId(client.getSessionId().toString());
+        if (participant != null) {
+            participant.setLastBeat(data);
+        } else {
+            log.warn("participant meta arrive but never register");
+        }
         Map<String, Object> resp = new HashMap<>(ParticipantHeartbeatListener.standardPayload);
         client.sendEvent(SeeleSocketIOServer.EVENT_HeartBeatResponseEvent, resp);
     }

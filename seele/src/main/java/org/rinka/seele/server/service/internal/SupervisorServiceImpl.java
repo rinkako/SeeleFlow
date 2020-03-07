@@ -4,9 +4,17 @@
  */
 package org.rinka.seele.server.service.internal;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.rinka.seele.server.connect.rest.CallableSupervisor;
 import org.rinka.seele.server.connect.rest.SupervisorRestPool;
+import org.rinka.seele.server.engine.resourcing.context.WorkitemContext;
+import org.rinka.seele.server.engine.resourcing.participant.ParticipantContext;
+import org.rinka.seele.server.engine.resourcing.participant.ParticipantPool;
+import org.rinka.seele.server.engine.resourcing.queue.WorkQueueContainer;
+import org.rinka.seele.server.engine.resourcing.queue.WorkQueueType;
 import org.rinka.seele.server.steady.seele.entity.SeeleSupervisorEntity;
 import org.rinka.seele.server.steady.seele.repository.SeeleSupervisorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -69,8 +79,25 @@ public class SupervisorServiceImpl implements SupervisorService {
                 .isPresent();
     }
 
+    @Override
     public CallableSupervisor get(String namespace) {
         return SupervisorRestPool.namespace(namespace).get().orElse(null);
+    }
+
+    @Override
+    public List<ParticipantSummary> listParticipantsInNamespace(String namespace) {
+        Set<ParticipantContext> participants = ParticipantPool.namespace(namespace).getParticipants();
+        List<ParticipantSummary> result = new ArrayList<>(participants.size());
+        for (ParticipantContext participant : participants) {
+            ParticipantSummary summary = new ParticipantSummary();
+            summary.setContext(participant);
+            WorkQueueContainer container = participant.getQueueContainer();
+            summary.setAllocatedWorkitems(new ArrayList<>(container.getQueue(WorkQueueType.ALLOCATED).getWorkitems().values()));
+            summary.setAcceptedWorkitems(new ArrayList<>(container.getQueue(WorkQueueType.ACCEPTED).getWorkitems().values()));
+            summary.setRunningWorkitems(new ArrayList<>(container.getQueue(WorkQueueType.STARTED).getWorkitems().values()));
+            result.add(summary);
+        }
+        return result;
     }
 
     @PostConstruct
@@ -82,5 +109,17 @@ public class SupervisorServiceImpl implements SupervisorService {
                     .add(se.getSupervisorId(), se.getHost(), se.getCallbackUri(), se.getFallbackHost());
         }
         log.info("Reloaded supervisor from steady, total: " + supervisors.size());
+    }
+
+    @Data
+    @ToString
+    @EqualsAndHashCode
+    public static class ParticipantSummary {
+
+        private List<WorkitemContext> allocatedWorkitems;
+        private List<WorkitemContext> acceptedWorkitems;
+        private List<WorkitemContext> runningWorkitems;
+
+        private ParticipantContext context;
     }
 }
